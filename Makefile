@@ -1,4 +1,4 @@
-.PHONY: build test generate format lint tidy check cover cover-html cover-cli mock run si
+.PHONY: build test generate fmt lint tidy check cover cover-html cover-cli mock run si
 
 build:
 	go build -o ./bin/gophermart ./cmd/gophermart
@@ -10,7 +10,7 @@ generate:
 	go generate ./...
 	make format
 
-format:
+fmt:
 	goimports -l -w .
 	swag fmt
 
@@ -21,7 +21,7 @@ lint:
 tidy:
 	go mod tidy
 
-check: build tidy format lint test
+check: build tidy fmt lint test
 
 cover:
 	go test ./... -coverpkg='./internal/...', -coverprofile coverage.out.tmp
@@ -37,8 +37,9 @@ cover-cli: cover
 mock:
 	mockgen -destination=internal/storage/storage_mocks/mock_repository.go -package=storage_mocks github.com/cmrd-a/gophermart/internal/storage Repository
 
-si:
-	swag init --generalInfo internal/api/server.go --output internal/api/docs
+swag:
+	swag init --generalInfo server.go --dir internal/api  --output internal/api/docs --parseInternal true
+	swag fmt
 
 run:build
 	./bin/gophermart

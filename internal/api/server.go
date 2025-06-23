@@ -36,7 +36,6 @@ func SetupRouter() *gin.Engine {
 	// gin.DisableConsoleColor()
 	r := gin.Default()
 
-	// Ping test
 	r.GET("/ping", func(c *gin.Context) {
 		c.String(http.StatusOK, "pong")
 	})

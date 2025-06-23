@@ -17,7 +17,53 @@
     },
     "host": "localhost:8080",
     "basePath": "/api/v1",
-    "paths": {},
+    "paths": {
+        "/api/user/orders": {
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/api.Order"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "api.Order": {
+            "type": "object",
+            "properties": {
+                "accural": {
+                    "type": "integer",
+                    "example": 500
+                },
+                "number": {
+                    "type": "integer",
+                    "example": 42
+                },
+                "status": {
+                    "description": "Статус расчёта начисления:\n* REGISTERED - заказ зарегистрирован, но вознаграждение не рассчитано;\n* INVALID - заказ не принят к расчёту, и вознаграждение не будет начислено;\n* PROCESSING - расчёт начисления в процессе;\n* PROCESSED - расчёт начисления окончен;",
+                    "type": "string",
+                    "enum": [
+                        "REGISTERED",
+                        "INVALID",
+                        "PROCESSING",
+                        "PROCESSED"
+                    ],
+                    "example": "PROCESSING"
+                },
+                "uploaded_at": {
+                    "type": "string",
+                    "example": "2025-06-23T23:48:45+03:00"
+                }
+            }
+        }
+    },
     "securityDefinitions": {
         "BasicAuth": {
             "type": "basic"

@@ -3,7 +3,6 @@ package api
 import (
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"strconv"
 
@@ -66,9 +65,13 @@ func PostUserOrders(c *gin.Context) {
 		httputil.NewError(c, http.StatusBadRequest, err)
 		return
 	}
-
-	log.Print(on)
+	o, ok := db[user]
+	if ok && o == int64(on) {
+		c.Status(http.StatusOK)
+		return
+	}
 	db[user] = int64(on)
+	c.Status(http.StatusAccepted)
 }
 
 // GetUserOrders возвращает список загруженных номеров заказов
@@ -91,5 +94,5 @@ func GetUserOrders(c *gin.Context) {
 		order := Order{Number: o}
 		orders = append(orders, order)
 	}
-	c.JSON(200, &orders)
+	c.JSON(http.StatusOK, &orders)
 }

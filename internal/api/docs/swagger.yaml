@@ -34,6 +34,9 @@ definitions:
       password:
         example: password
         type: string
+    required:
+    - login
+    - password
     type: object
   httputil.HTTPError:
     properties:
@@ -53,6 +56,8 @@ info:
 paths:
   /api/user/orders:
     get:
+      produces:
+      - application/json
       responses:
         "200":
           description: OK
@@ -60,6 +65,18 @@ paths:
             items:
               $ref: '#/definitions/api.Order'
             type: array
+      summary: Получение списка загруженных номеров заказов
+      tags:
+      - orders
+    post:
+      consumes:
+      - text/plain
+      produces:
+      - text/plain
+      responses: {}
+      summary: Загрузка номера заказа
+      tags:
+      - orders
   /api/user/register:
     post:
       consumes:
@@ -90,8 +107,5 @@ paths:
             $ref: '#/definitions/httputil.HTTPError'
       summary: Регистрация пользователя
       tags:
-      - user
-securityDefinitions:
-  BasicAuth:
-    type: basic
+      - auth
 swagger: "2.0"

@@ -17,6 +17,13 @@ const docTemplate = `{
     "paths": {
         "/api/user/orders": {
             "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "orders"
+                ],
+                "summary": "Получение списка загруженных номеров заказов",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -28,6 +35,19 @@ const docTemplate = `{
                         }
                     }
                 }
+            },
+            "post": {
+                "consumes": [
+                    "text/plain"
+                ],
+                "produces": [
+                    "text/plain"
+                ],
+                "tags": [
+                    "orders"
+                ],
+                "summary": "Загрузка номера заказа",
+                "responses": {}
             }
         },
         "/api/user/register": {
@@ -39,7 +59,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "user"
+                    "auth"
                 ],
                 "summary": "Регистрация пользователя",
                 "parameters": [
@@ -110,6 +130,10 @@ const docTemplate = `{
         },
         "api.UserRegisterRequest": {
             "type": "object",
+            "required": [
+                "login",
+                "password"
+            ],
             "properties": {
                 "login": {
                     "type": "string",
@@ -133,11 +157,6 @@ const docTemplate = `{
                     "example": "status bad request"
                 }
             }
-        }
-    },
-    "securityDefinitions": {
-        "BasicAuth": {
-            "type": "basic"
         }
     }
 }`

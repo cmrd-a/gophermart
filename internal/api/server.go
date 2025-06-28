@@ -4,30 +4,24 @@ import (
 	"net/http"
 
 	_ "github.com/cmrd-a/gophermart/internal/api/docs"
+	"github.com/cmrd-a/gophermart/internal/api/middleware"
 	"github.com/gin-gonic/gin"
-	swaggerFiles "github.com/swaggo/files"     
+	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 //	@title			Gophermart API
 //	@version		1.0
 //	@description	Накопительная система лояльности «Гофермарт»
+//	@host			localhost:8080
+//	@BasePath		/
 
-//	@host		localhost:8080
-//	@BasePath	/
-
-//	@securityDefinitions.basic	BasicAuth
-
-var db = make(map[string]string)
+var db = make(map[string]int64)
 
 func SetupRouter() *gin.Engine {
 	// Disable Console Color
 	// gin.DisableConsoleColor()
 	r := gin.Default()
-
-	r.GET("/ping", func(c *gin.Context) {
-		c.String(http.StatusOK, "pong")
-	})
 
 	r.POST("/api/user/register", UserRegister)
 
@@ -42,33 +36,17 @@ func SetupRouter() *gin.Engine {
 		}
 	})
 
-	// Authorized group (uses gin.BasicAuth() middleware)
-	// Same than:
-	// authorized := r.Group("/")
-	// authorized.Use(gin.BasicAuth(gin.Credentials{
-	//	  "foo":  "bar",
-	//	  "manu": "123",
-	//}))
-	authorized := r.Group("/", gin.BasicAuth(gin.Accounts{
-		"foo":  "bar", // user:foo password:bar
-		"manu": "123", // user:manu password:123
-	}))
+	authorized := r.Group("/")
+	authorized.Use(middleware.Auth())
+	authorized.POST("/api/user/orders", PostUserOrders)
+	authorized.GET("/api/user/orders", GetUserOrders)
 
-	/* example curl for /admin with basicauth header
-	   Zm9vOmJhcg== is base64("foo:bar")
-
-		curl -X POST \
-	  	http://localhost:8080/admin \
-	  	-H 'authorization: Basic Zm9vOmJhcg==' \
-	  	-H 'content-type: application/json' \
-	  	-d '{"value":"bar"}'
-	*/
 	authorized.POST("admin", func(c *gin.Context) {
 		user := c.MustGet(gin.AuthUserKey).(string)
 
 		// Parse JSON
 		var json struct {
-			Value string `json:"value" binding:"required"`
+			Value int64 `json:"value" binding:"required"`
 		}
 
 		if c.Bind(&json) == nil {

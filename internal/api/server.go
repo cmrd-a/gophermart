@@ -5,29 +5,18 @@ import (
 
 	_ "github.com/cmrd-a/gophermart/internal/api/docs"
 	"github.com/gin-gonic/gin"
-	swaggerFiles "github.com/swaggo/files"     // swagger embed files
-	ginSwagger "github.com/swaggo/gin-swagger" // gin-swagger middleware
+	swaggerFiles "github.com/swaggo/files"     
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
-//	@title			Swagger Example API
+//	@title			Gophermart API
 //	@version		1.0
-//	@description	This is a sample server celler server.
-//	@termsOfService	http://swagger.io/terms/
-
-//	@contact.name	API Support
-//	@contact.url	http://www.swagger.io/support
-//	@contact.email	support@swagger.io
-
-//	@license.name	Apache 2.0
-//	@license.url	http://www.apache.org/licenses/LICENSE-2.0.html
+//	@description	Накопительная система лояльности «Гофермарт»
 
 //	@host		localhost:8080
-//	@BasePath	/api/v1
+//	@BasePath	/
 
 //	@securityDefinitions.basic	BasicAuth
-
-//	@externalDocs.description	OpenAPI
-//	@externalDocs.url			https://swagger.io/resources/open-api/
 
 var db = make(map[string]string)
 
@@ -39,6 +28,8 @@ func SetupRouter() *gin.Engine {
 	r.GET("/ping", func(c *gin.Context) {
 		c.String(http.StatusOK, "pong")
 	})
+
+	r.POST("/api/user/register", UserRegister)
 
 	// Get user value
 	r.GET("/user/:name", func(c *gin.Context) {

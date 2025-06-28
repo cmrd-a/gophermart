@@ -38,7 +38,7 @@ mock:
 	mockgen -destination=internal/storage/storage_mocks/mock_repository.go -package=storage_mocks github.com/cmrd-a/gophermart/internal/storage Repository
 
 swag:
-	swag init --generalInfo server.go --dir internal/api  --output internal/api/docs --parseInternal true
+	swag init --parseDependency --generalInfo server.go --dir internal/api --output internal/api/docs --parseInternal true
 	swag fmt
 
 run:build

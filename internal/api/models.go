@@ -2,6 +2,11 @@ package api
 
 import "time"
 
+type UserRegisterRequest struct {
+	Login    string `json:"login" example:"user@example.com"`
+	Password string `json:"password" example:"password"`
+}
+
 type orderStatus string
 
 const (

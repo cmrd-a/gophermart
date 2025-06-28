@@ -1,4 +1,4 @@
-basePath: /api/v1
+basePath: /
 definitions:
   api.Order:
     properties:
@@ -26,21 +26,29 @@ definitions:
         example: "2025-06-23T23:48:45+03:00"
         type: string
     type: object
-externalDocs:
-  description: OpenAPI
-  url: https://swagger.io/resources/open-api/
+  api.UserRegisterRequest:
+    properties:
+      login:
+        example: user@example.com
+        type: string
+      password:
+        example: password
+        type: string
+    type: object
+  httputil.HTTPError:
+    properties:
+      code:
+        example: 400
+        type: integer
+      message:
+        example: status bad request
+        type: string
+    type: object
 host: localhost:8080
 info:
-  contact:
-    email: support@swagger.io
-    name: API Support
-    url: http://www.swagger.io/support
-  description: This is a sample server celler server.
-  license:
-    name: Apache 2.0
-    url: http://www.apache.org/licenses/LICENSE-2.0.html
-  termsOfService: http://swagger.io/terms/
-  title: Swagger Example API
+  contact: {}
+  description: Накопительная система лояльности «Гофермарт»
+  title: Gophermart API
   version: "1.0"
 paths:
   /api/user/orders:
@@ -52,6 +60,37 @@ paths:
             items:
               $ref: '#/definitions/api.Order'
             type: array
+  /api/user/register:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: данные пользователя для регистрации
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.UserRegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+      summary: Регистрация пользователя
+      tags:
+      - user
 securityDefinitions:
   BasicAuth:
     type: basic

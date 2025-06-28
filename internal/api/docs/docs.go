@@ -24,14 +24,44 @@ const docTemplate = `{
                     "orders"
                 ],
                 "summary": "Получение списка загруженных номеров заказов",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "токен авторизации",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "успешная обработка запроса",
                         "schema": {
                             "type": "array",
                             "items": {
                                 "$ref": "#/definitions/api.Order"
                             }
+                        }
+                    },
+                    "204": {
+                        "description": "нет данных для ответа",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/api.Order"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "пользователь не авторизован",
+                        "schema": {
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "внутренняя ошибка сервера",
+                        "schema": {
+                            "$ref": "#/definitions/httputil.HTTPError"
                         }
                     }
                 }
@@ -41,13 +71,53 @@ const docTemplate = `{
                     "text/plain"
                 ],
                 "produces": [
-                    "text/plain"
+                    "application/json"
                 ],
                 "tags": [
                     "orders"
                 ],
                 "summary": "Загрузка номера заказа",
-                "responses": {}
+                "parameters": [
+                    {
+                        "description": "номер заказа",
+                        "name": "orderNumber",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "type": "string",
+                        "description": "токен авторизации",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "номер заказа уже был загружен этим пользователем"
+                    },
+                    "202": {
+                        "description": "новый номер заказа принят в обработку"
+                    },
+                    "400": {
+                        "description": "неверный формат запроса"
+                    },
+                    "401": {
+                        "description": "пользователь не аутентифицирован"
+                    },
+                    "409": {
+                        "description": "номер заказа уже был загружен другим пользователем"
+                    },
+                    "422": {
+                        "description": "неверный формат номера заказа"
+                    },
+                    "500": {
+                        "description": "внутренняя ошибка сервера"
+                    }
+                }
             }
         },
         "/api/user/register": {
@@ -75,22 +145,28 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK"
+                        "description": "пользователь успешно зарегистрирован и аутентифицирован",
+                        "headers": {
+                            "Authorization": {
+                                "type": "string",
+                                "description": "токен авторизации"
+                            }
+                        }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "неверный формат запроса",
                         "schema": {
                             "$ref": "#/definitions/httputil.HTTPError"
                         }
                     },
                     "409": {
-                        "description": "Conflict",
+                        "description": "логин уже занят",
                         "schema": {
                             "$ref": "#/definitions/httputil.HTTPError"
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "внутренняя ошибка сервера",
                         "schema": {
                             "$ref": "#/definitions/httputil.HTTPError"
                         }
@@ -108,8 +184,8 @@ const docTemplate = `{
                     "example": 500
                 },
                 "number": {
-                    "type": "integer",
-                    "example": 42
+                    "type": "string",
+                    "example": "42"
                 },
                 "status": {
                     "description": "Статус расчёта начисления:\n* REGISTERED - заказ зарегистрирован, но вознаграждение не рассчитано;\n* INVALID - заказ не принят к расчёту, и вознаграждение не будет начислено;\n* PROCESSING - расчёт начисления в процессе;\n* PROCESSED - расчёт начисления окончен;",

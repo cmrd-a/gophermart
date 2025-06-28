@@ -6,8 +6,8 @@ definitions:
         example: 500
         type: integer
       number:
-        example: 42
-        type: integer
+        example: "42"
+        type: string
       status:
         description: |-
           Статус расчёта начисления:
@@ -56,24 +56,70 @@ info:
 paths:
   /api/user/orders:
     get:
+      parameters:
+      - description: токен авторизации
+        in: header
+        name: Authorization
+        required: true
+        type: string
       produces:
       - application/json
       responses:
         "200":
-          description: OK
+          description: успешная обработка запроса
           schema:
             items:
               $ref: '#/definitions/api.Order'
             type: array
+        "204":
+          description: нет данных для ответа
+          schema:
+            items:
+              $ref: '#/definitions/api.Order'
+            type: array
+        "401":
+          description: пользователь не авторизован
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+        "500":
+          description: внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
       summary: Получение списка загруженных номеров заказов
       tags:
       - orders
     post:
       consumes:
       - text/plain
+      parameters:
+      - description: номер заказа
+        in: body
+        name: orderNumber
+        required: true
+        schema:
+          type: string
+      - description: токен авторизации
+        in: header
+        name: Authorization
+        required: true
+        type: string
       produces:
-      - text/plain
-      responses: {}
+      - application/json
+      responses:
+        "200":
+          description: номер заказа уже был загружен этим пользователем
+        "202":
+          description: новый номер заказа принят в обработку
+        "400":
+          description: неверный формат запроса
+        "401":
+          description: пользователь не аутентифицирован
+        "409":
+          description: номер заказа уже был загружен другим пользователем
+        "422":
+          description: неверный формат номера заказа
+        "500":
+          description: внутренняя ошибка сервера
       summary: Загрузка номера заказа
       tags:
       - orders
@@ -92,17 +138,21 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
+          description: пользователь успешно зарегистрирован и аутентифицирован
+          headers:
+            Authorization:
+              description: токен авторизации
+              type: string
         "400":
-          description: Bad Request
+          description: неверный формат запроса
           schema:
             $ref: '#/definitions/httputil.HTTPError'
         "409":
-          description: Conflict
+          description: логин уже занят
           schema:
             $ref: '#/definitions/httputil.HTTPError'
         "500":
-          description: Internal Server Error
+          description: внутренняя ошибка сервера
           schema:
             $ref: '#/definitions/httputil.HTTPError'
       summary: Регистрация пользователя

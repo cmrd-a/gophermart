@@ -1,5 +1,8 @@
 .PHONY: build test generate fmt lint tidy check cover cover-html cover-cli mock run si
+.SILENT: cover
 
+include .env
+export
 build:
 	go build -o ./bin/gophermart ./cmd/gophermart
 
@@ -21,12 +24,12 @@ lint:
 tidy:
 	go mod tidy
 
-check: build tidy fmt lint test
+check: build tidy fmt lint cover-cli
 
 cover:
-	go test ./... -coverpkg='./internal/...', -coverprofile coverage.out.tmp
-	cat coverage.out.tmp | grep -v "_easyjson.go\|mocks" > coverage.out
-	rm coverage.out.tmp
+	go test ./... -coverpkg='./internal/...', -coverprofile coverage-temp.out
+	cat coverage-temp.out | grep -v "_easyjson.go\|mocks" > coverage.out
+	rm coverage-temp.out
 
 cover-html: cover
 	go tool cover -html=coverage.out

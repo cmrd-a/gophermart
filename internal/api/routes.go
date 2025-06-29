@@ -12,7 +12,7 @@ import (
 	"github.com/swaggo/swag/example/celler/httputil"
 )
 
-var repo = repository.NewRepository()
+var repo, _ = repository.NewRepository()
 var Service = service.NewService(*repo)
 
 // UserRegister регистрирует нового пользователя

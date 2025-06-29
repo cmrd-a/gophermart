@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 
+	"github.com/cmrd-a/gophermart/internal/domain"
 	"github.com/cmrd-a/gophermart/internal/repository"
 )
 
@@ -22,8 +23,8 @@ func (s *Service) AddOrder(ctx context.Context, orderNumber string, userID int64
 	return s.repo.AddOrder(ctx, orderNumber, userID)
 }
 
-func (s *Service) GetOrder(ctx context.Context, orderNumber string) *repository.Order {
-	var order repository.Order
+func (s *Service) GetOrder(ctx context.Context, orderNumber string) *domain.Order {
+	var order domain.Order
 	order, err := s.repo.GetOrder(ctx, orderNumber)
 	if err != nil {
 		return nil
@@ -31,6 +32,6 @@ func (s *Service) GetOrder(ctx context.Context, orderNumber string) *repository.
 	return &order
 }
 
-func (s *Service) GetUserOrders(ctx context.Context, userID int64) ([]repository.Order, error) {
+func (s *Service) GetUserOrders(ctx context.Context, userID int64) ([]domain.Order, error) {
 	return s.repo.GetUserOrders(ctx, userID)
 }

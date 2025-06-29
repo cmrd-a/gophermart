@@ -30,9 +30,9 @@ func InitConfig() {
 			fmt.Println("AccrualSystemAddress:", Config.AccrualSystemAddress)
 		},
 	}
-	rootCmd.Flags().StringP("address", "a", ":9090", "gophermart address and port")
+	rootCmd.Flags().StringP("address", "a", ":8080", "gophermart address and port")
 	rootCmd.Flags().StringP("database", "d", "", "database URI")
-	rootCmd.Flags().StringP("accural", "r", ":8080", "accrual address and port")
+	rootCmd.Flags().StringP("accural", "r", ":9090", "accrual address and port")
 	viper.BindPFlag("RUN_ADDRESS", rootCmd.Flags().Lookup("address"))
 	viper.BindPFlag("DATABASE_URI", rootCmd.Flags().Lookup("database"))
 	viper.BindPFlag("ACCRUAL_SYSTEM_ADDRESS", rootCmd.Flags().Lookup("accural"))

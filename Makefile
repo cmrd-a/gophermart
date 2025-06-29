@@ -24,7 +24,7 @@ lint:
 tidy:
 	go mod tidy
 
-check: build tidy fmt lint cover-cli
+check: fmt tidy build lint cover-cli
 
 cover:
 	go test ./... -coverpkg='./internal/...', -coverprofile coverage-temp.out

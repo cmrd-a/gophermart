@@ -179,7 +179,7 @@ const docTemplate = `{
         "api.Order": {
             "type": "object",
             "properties": {
-                "accural": {
+                "accrual": {
                     "type": "integer",
                     "example": 500
                 },

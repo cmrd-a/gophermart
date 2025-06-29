@@ -10,15 +10,6 @@ type UserRegisterRequest struct {
 	Password string `json:"password" example:"password" binding:"required"`
 }
 
-type orderStatus string
-
-const (
-	REGISTERED orderStatus = "REGISTERED"
-	INVALID    orderStatus = "INVALID"
-	PROCESSING orderStatus = "PROCESSING"
-	PROCESSED  orderStatus = "PROCESSED"
-)
-
 type JSONTime time.Time
 
 func (t JSONTime) MarshalJSON() ([]byte, error) {
@@ -29,12 +20,12 @@ func (t JSONTime) MarshalJSON() ([]byte, error) {
 type Order struct {
 	Number string `json:"number" example:"42"`
 	// Статус расчёта начисления:
-	// * REGISTERED - заказ зарегистрирован, но вознаграждение не рассчитано;
-	// * INVALID - заказ не принят к расчёту, и вознаграждение не будет начислено;
-	// * PROCESSING - расчёт начисления в процессе;
-	// * PROCESSED - расчёт начисления окончен;
-	Status     string   `json:"status" example:"PROCESSING" enums:"REGISTERED,INVALID,PROCESSING,PROCESSED"`
-	Accural    int64    `json:"accural,omitempty" example:"500"`
+	// * NEW - заказ загружен в систему, но не попал в обработку;
+	// * PROCESSING - вознаграждение за заказ рассчитывается;
+	// * INVALID - система расчёта вознаграждений отказала в расчёте;
+	// * PROCESSED -  данные по заказу проверены и информация о расчёте успешно получена;
+	Status     string   `json:"status" example:"PROCESSING" enums:"NEW,PROCESSING,PROCESSED,INVALID"`
+	Accrual    int64    `json:"accrual,omitempty" example:"500"`
 	UploadedAt JSONTime `json:"uploaded_at" example:"2025-06-23T23:48:45+03:00"`
 }
 

@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"errors"
 	"io"
 	"net/http"
@@ -13,7 +14,7 @@ import (
 )
 
 var repo, _ = repository.NewRepository()
-var Service = service.NewService(*repo)
+var Service = service.NewService(context.TODO(), *repo)
 
 // UserRegister регистрирует нового пользователя
 //
@@ -58,7 +59,6 @@ func UserRegister(c *gin.Context) {
 //	@Produce	json
 //	@Router		/api/user/orders [post]
 func PostUserOrders(c *gin.Context) {
-
 	userID := c.GetInt64("userID")
 
 	bodyBytes, err := io.ReadAll(c.Request.Body)
@@ -67,6 +67,9 @@ func PostUserOrders(c *gin.Context) {
 		return
 	}
 	orderNumber := string(bodyBytes)
+	Service.Publish(orderNumber)
+	// service.Consumer()
+	// time.Sleep(2 * time.Second)
 	orderNumberInt, err := strconv.Atoi(orderNumber)
 	if err != nil {
 		httputil.NewError(c, http.StatusBadRequest, err)
@@ -107,7 +110,6 @@ func PostUserOrders(c *gin.Context) {
 //	@Router		/api/user/orders [get]
 func GetUserOrders(c *gin.Context) {
 	userID := c.GetInt64("userID")
-
 	ro, err := Service.GetUserOrders(c, userID)
 	if err != nil {
 		httputil.NewError(c, http.StatusInternalServerError, err)
@@ -119,7 +121,7 @@ func GetUserOrders(c *gin.Context) {
 	}
 	jo := make(Orders, len(ro))
 	for i, order := range ro {
-		jo[i] = Order{Number: order.Number, Status: order.Status, Accural: order.Accural, UploadedAt: JSONTime(order.UploadedAt)}
+		jo[i] = Order{Number: order.Number, Status: order.Status, Accrual: order.Accrual, UploadedAt: JSONTime(order.UploadedAt)}
 	}
 	c.JSON(http.StatusOK, &jo)
 }

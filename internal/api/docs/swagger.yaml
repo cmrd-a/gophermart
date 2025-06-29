@@ -2,7 +2,7 @@ basePath: /
 definitions:
   api.Order:
     properties:
-      accural:
+      accrual:
         example: 500
         type: integer
       number:

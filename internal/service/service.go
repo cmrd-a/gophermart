@@ -3,9 +3,9 @@ package service
 import (
 	"context"
 	"encoding/json"
-	"os"
 
 	"github.com/cmrd-a/gophermart/internal/accrual"
+	"github.com/cmrd-a/gophermart/internal/config"
 	"github.com/cmrd-a/gophermart/internal/domain"
 	"github.com/cmrd-a/gophermart/internal/repository"
 
@@ -50,10 +50,8 @@ func (s *Service) GetUserOrders(ctx context.Context, userID int64) ([]domain.Ord
 }
 
 func (s *Service) Publish(orderNumber string) {
-	uri := os.Getenv("DATABASE_URI")
-
 	// create a new postgres connection
-	db, err := sql.Open("pgx", uri)
+	db, err := sql.Open("pgx", config.Config.DatabaseURI)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -83,10 +81,7 @@ func (s *Service) Publish(orderNumber string) {
 }
 
 func (s *Service) consumerJob(ctx context.Context) {
-	uri := os.Getenv("DATABASE_URI")
-
-	// create a new postgres connection and publisher
-	db, err := sql.Open("pgx", uri)
+	db, err := sql.Open("pgx", config.Config.DatabaseURI)
 	if err != nil {
 		panic(err.Error())
 	}

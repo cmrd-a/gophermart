@@ -1,8 +1,8 @@
 .PHONY: build test generate fmt lint tidy check cover cover-html cover-cli mock run swag
 .SILENT: cover
 
-include .env
-export
+# include .env
+# export
 
 build:
 	CGO_ENABLED=0 go build -buildvcs=false -o ./bin/gophermart ./cmd/gophermart
@@ -19,8 +19,6 @@ fmt:
 	swag fmt
 
 lint:
-	go vet ./...
-	staticcheck -checks=all,-ST1000, ./...
 	golangci-lint run
 
 tidy:

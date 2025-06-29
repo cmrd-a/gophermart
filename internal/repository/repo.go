@@ -2,9 +2,8 @@ package repository
 
 import (
 	"context"
-	"log"
-	"os"
 
+	"github.com/cmrd-a/gophermart/internal/config"
 	"github.com/cmrd-a/gophermart/internal/domain"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -14,9 +13,7 @@ type Repository struct {
 }
 
 func NewRepository() (*Repository, error) {
-	uri := os.Getenv("DATABASE_URI")
-	log.Printf("Connecting to database: %s", uri)
-	pool, err := pgxpool.New(context.Background(), uri)
+	pool, err := pgxpool.New(context.Background(), config.Config.DatabaseURI)
 	if err != nil {
 		return nil, err
 	}

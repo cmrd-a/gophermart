@@ -11,7 +11,7 @@ import (
 //	@title			Gophermart API
 //	@version		1.0
 //	@description	Накопительная система лояльности «Гофермарт»
-//	@BasePath	/
+//	@BasePath		/
 
 func SetupRouter() *gin.Engine {
 	r := gin.Default()

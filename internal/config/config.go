@@ -43,19 +43,19 @@ func InitConfig() {
 	viper.AutomaticEnv()
 
 	// Bind environment variables
-	viper.BindEnv("RUN_ADDRESS")
-	viper.BindEnv("DATABASE_URI")
-	viper.BindEnv("ACCRUAL_SYSTEM_ADDRESS")
+	// viper.BindEnv("RUN_ADDRESS")
+	// viper.BindEnv("DATABASE_URI")
+	// viper.BindEnv("ACCRUAL_SYSTEM_ADDRESS")
 
 	// Set the configuration file name and path
-	viper.SetConfigName(".env")
-	viper.SetConfigType("env")
-	viper.AddConfigPath(".") // Search in the working directory
+	// viper.(".env")
+	// viper.SetConfigType("env")
+	// viper.AddConfigPath(".") // Search in the working directory
 
 	// Read the configuration file
-	if err := viper.ReadInConfig(); err != nil {
-		fmt.Printf("Error reading config file, %s\n", err)
-	}
+	// if err := viper.ReadInConfig(); err != nil {
+	// 	fmt.Printf("Error reading config file, %s\n", err)
+	// }
 
 	// Execute the root command
 	if err := rootCmd.Execute(); err != nil {

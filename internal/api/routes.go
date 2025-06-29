@@ -119,7 +119,7 @@ func GetUserOrders(c *gin.Context) {
 	}
 	jo := make(Orders, len(ro))
 	for i, order := range ro {
-		jo[i] = Order{Number: order.Number, Status: order.Status, Accural: order.Accural, UploadedAt: order.UploadedAt}
+		jo[i] = Order{Number: order.Number, Status: order.Status, Accural: order.Accural, UploadedAt: JSONTime(order.UploadedAt)}
 	}
 	c.JSON(http.StatusOK, &jo)
 }

@@ -50,7 +50,6 @@ func (s *Service) GetUserOrders(ctx context.Context, userID int64) ([]domain.Ord
 }
 
 func (s *Service) Publish(orderNumber string) {
-	// create a new postgres connection
 	db, err := sql.Open("pgx", config.Config.DatabaseURI)
 	if err != nil {
 		panic(err.Error())
@@ -81,6 +80,9 @@ func (s *Service) Publish(orderNumber string) {
 }
 
 func (s *Service) consumerJob(ctx context.Context) {
+	if config.Config.DatabaseURI == "" {
+		return
+	}
 	db, err := sql.Open("pgx", config.Config.DatabaseURI)
 	if err != nil {
 		panic(err.Error())

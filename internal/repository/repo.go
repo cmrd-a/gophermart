@@ -5,11 +5,22 @@ import (
 
 	"github.com/cmrd-a/gophermart/internal/config"
 	"github.com/cmrd-a/gophermart/internal/domain"
+	pgx "github.com/jackc/pgx/v5"
+	pgconn "github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+type PgxIface interface {
+	Begin(context.Context) (pgx.Tx, error)
+	Exec(context.Context, string, ...any) (pgconn.CommandTag, error)
+	QueryRow(context.Context, string, ...any) pgx.Row
+	Query(context.Context, string, ...any) (pgx.Rows, error)
+	Ping(context.Context) error
+	Close()
+}
+
 type Repository struct {
-	*pgxpool.Pool
+	PgxIface
 }
 
 func NewRepository() (*Repository, error) {

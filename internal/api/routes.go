@@ -1,20 +1,15 @@
 package api
 
 import (
-	"context"
 	"errors"
 	"io"
 	"net/http"
 	"strconv"
 
-	"github.com/cmrd-a/gophermart/internal/repository"
 	"github.com/cmrd-a/gophermart/internal/service"
 	"github.com/gin-gonic/gin"
 	"github.com/swaggo/swag/example/celler/httputil"
 )
-
-var repo, _ = repository.NewRepository()
-var Service = service.NewService(context.TODO(), *repo)
 
 // UserRegister регистрирует нового пользователя
 //
@@ -29,17 +24,19 @@ var Service = service.NewService(context.TODO(), *repo)
 //	@Failure	500	{object}	httputil.HTTPError	"внутренняя ошибка сервера"
 //	@Header		200	string		Authorization		"токен авторизации"
 //	@Router		/api/user/register [post]
-func UserRegister(c *gin.Context) {
-	r := UserRegisterRequest{}
-	if err := c.BindJSON(&r); err != nil {
-		c.String(http.StatusOK, err.Error())
+func UserRegister(svc *service.Service) func(c *gin.Context) {
+	return func(c *gin.Context) {
+		r := UserRegisterRequest{}
+		if err := c.BindJSON(&r); err != nil {
+			c.String(http.StatusOK, err.Error())
+		}
+		userID, err := svc.AddUser(c, r.Login, r.Password)
+		if err != nil {
+			httputil.NewError(c, http.StatusBadRequest, err)
+			return
+		}
+		c.Header("Authorization", strconv.Itoa(int(userID)))
 	}
-	userID, err := Service.AddUser(c, r.Login, r.Password)
-	if err != nil {
-		httputil.NewError(c, http.StatusBadRequest, err)
-		return
-	}
-	c.Header("Authorization", strconv.Itoa(int(userID)))
 }
 
 // PostUserOrders загружает номер заказа
@@ -58,43 +55,46 @@ func UserRegister(c *gin.Context) {
 //	@Param		Authorization	header	string	true	"токен авторизации"
 //	@Produce	json
 //	@Router		/api/user/orders [post]
-func PostUserOrders(c *gin.Context) {
-	userID := c.GetInt64("userID")
+func PostUserOrders(svc *service.Service) func(c *gin.Context) {
+	return func(c *gin.Context) {
 
-	bodyBytes, err := io.ReadAll(c.Request.Body)
-	if err != nil {
-		httputil.NewError(c, http.StatusBadRequest, err)
-		return
-	}
-	orderNumber := string(bodyBytes)
-	Service.Publish(orderNumber)
-	// service.Consumer()
-	// time.Sleep(2 * time.Second)
-	orderNumberInt, err := strconv.Atoi(orderNumber)
-	if err != nil {
-		httputil.NewError(c, http.StatusBadRequest, err)
-		return
-	}
-	if !service.Valid(orderNumberInt) {
-		httputil.NewError(c, http.StatusUnprocessableEntity, errors.New("invalid order number"))
-		return
-	}
-	existed := Service.GetOrder(c, orderNumber)
-	if existed != nil {
-		if existed.UserID == userID {
-			c.Status(http.StatusOK)
-			return
-		} else {
-			httputil.NewError(c, http.StatusConflict, errors.New("order already exists"))
+		userID := c.GetInt64("userID")
+
+		bodyBytes, err := io.ReadAll(c.Request.Body)
+		if err != nil {
+			httputil.NewError(c, http.StatusBadRequest, err)
 			return
 		}
+		orderNumber := string(bodyBytes)
+		svc.Publish(orderNumber)
+		// service.Consumer()
+		// time.Sleep(2 * time.Second)
+		orderNumberInt, err := strconv.Atoi(orderNumber)
+		if err != nil {
+			httputil.NewError(c, http.StatusBadRequest, err)
+			return
+		}
+		if !service.Valid(orderNumberInt) {
+			httputil.NewError(c, http.StatusUnprocessableEntity, errors.New("invalid order number"))
+			return
+		}
+		existed := svc.GetOrder(c, orderNumber)
+		if existed != nil {
+			if existed.UserID == userID {
+				c.Status(http.StatusOK)
+				return
+			} else {
+				httputil.NewError(c, http.StatusConflict, errors.New("order already exists"))
+				return
+			}
+		}
+		err = svc.AddOrder(c, orderNumber, userID)
+		if err != nil {
+			httputil.NewError(c, http.StatusBadRequest, err)
+			return
+		}
+		c.Status(http.StatusAccepted)
 	}
-	err = Service.AddOrder(c, orderNumber, userID)
-	if err != nil {
-		httputil.NewError(c, http.StatusBadRequest, err)
-		return
-	}
-	c.Status(http.StatusAccepted)
 }
 
 // GetUserOrders возвращает список загруженных номеров заказов
@@ -108,20 +108,22 @@ func PostUserOrders(c *gin.Context) {
 //	@Produce	json
 //	@Param		Authorization	header	string	true	"токен авторизации"
 //	@Router		/api/user/orders [get]
-func GetUserOrders(c *gin.Context) {
-	userID := c.GetInt64("userID")
-	ro, err := Service.GetUserOrders(c, userID)
-	if err != nil {
-		httputil.NewError(c, http.StatusInternalServerError, err)
-		return
+func GetUserOrders(svc *service.Service) func(c *gin.Context) {
+	return func(c *gin.Context) {
+		userID := c.GetInt64("userID")
+		ro, err := svc.GetUserOrders(c, userID)
+		if err != nil {
+			httputil.NewError(c, http.StatusInternalServerError, err)
+			return
+		}
+		if len(ro) == 0 {
+			c.Status(http.StatusNoContent)
+			return
+		}
+		jo := make(Orders, len(ro))
+		for i, order := range ro {
+			jo[i] = Order{Number: order.Number, Status: order.Status, Accrual: order.Accrual, UploadedAt: JSONTime(order.UploadedAt)}
+		}
+		c.JSON(http.StatusOK, &jo)
 	}
-	if len(ro) == 0 {
-		c.Status(http.StatusNoContent)
-		return
-	}
-	jo := make(Orders, len(ro))
-	for i, order := range ro {
-		jo[i] = Order{Number: order.Number, Status: order.Status, Accrual: order.Accrual, UploadedAt: JSONTime(order.UploadedAt)}
-	}
-	c.JSON(http.StatusOK, &jo)
 }

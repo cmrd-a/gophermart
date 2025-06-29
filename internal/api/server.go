@@ -8,11 +8,10 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
-// @title			Gophermart API
-// @version		1.0
-// @description	Накопительная система лояльности «Гофермарт»
-// @host			localhost:8080
-// @BasePath		/
+//	@title			Gophermart API
+//	@version		1.0
+//	@description	Накопительная система лояльности «Гофермарт»
+//	@BasePath	/
 
 func SetupRouter() *gin.Engine {
 	r := gin.Default()

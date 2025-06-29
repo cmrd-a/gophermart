@@ -11,15 +11,15 @@ definitions:
       status:
         description: |-
           Статус расчёта начисления:
-          * REGISTERED - заказ зарегистрирован, но вознаграждение не рассчитано;
-          * INVALID - заказ не принят к расчёту, и вознаграждение не будет начислено;
-          * PROCESSING - расчёт начисления в процессе;
-          * PROCESSED - расчёт начисления окончен;
+          * NEW - заказ загружен в систему, но не попал в обработку;
+          * PROCESSING - вознаграждение за заказ рассчитывается;
+          * INVALID - система расчёта вознаграждений отказала в расчёте;
+          * PROCESSED -  данные по заказу проверены и информация о расчёте успешно получена;
         enum:
-        - REGISTERED
-        - INVALID
+        - NEW
         - PROCESSING
         - PROCESSED
+        - INVALID
         example: PROCESSING
         type: string
       uploaded_at:
@@ -47,7 +47,6 @@ definitions:
         example: status bad request
         type: string
     type: object
-host: localhost:8080
 info:
   contact: {}
   description: Накопительная система лояльности «Гофермарт»

@@ -19,6 +19,8 @@ fmt:
 	swag fmt
 
 lint:
+	go vet ./...
+	staticcheck -checks=all,-ST1000, ./...
 	golangci-lint run
 
 tidy:

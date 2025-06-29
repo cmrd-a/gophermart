@@ -6,7 +6,6 @@
         "contact": {},
         "version": "1.0"
     },
-    "host": "localhost:8080",
     "basePath": "/",
     "paths": {
         "/api/user/orders": {
@@ -182,13 +181,13 @@
                     "example": "42"
                 },
                 "status": {
-                    "description": "Статус расчёта начисления:\n* REGISTERED - заказ зарегистрирован, но вознаграждение не рассчитано;\n* INVALID - заказ не принят к расчёту, и вознаграждение не будет начислено;\n* PROCESSING - расчёт начисления в процессе;\n* PROCESSED - расчёт начисления окончен;",
+                    "description": "Статус расчёта начисления:\n* NEW - заказ загружен в систему, но не попал в обработку;\n* PROCESSING - вознаграждение за заказ рассчитывается;\n* INVALID - система расчёта вознаграждений отказала в расчёте;\n* PROCESSED -  данные по заказу проверены и информация о расчёте успешно получена;",
                     "type": "string",
                     "enum": [
-                        "REGISTERED",
-                        "INVALID",
+                        "NEW",
                         "PROCESSING",
-                        "PROCESSED"
+                        "PROCESSED",
+                        "INVALID"
                     ],
                     "example": "PROCESSING"
                 },

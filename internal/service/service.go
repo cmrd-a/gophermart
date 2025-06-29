@@ -74,12 +74,12 @@ func (s *Service) Publish(orderNumber string) {
 	msg := &pgq.MessageOutgoing{
 		Payload: json.RawMessage(message),
 	}
-	msgId, err := publisher.Publish(context.Background(), queueName, msg)
+	msgID, err := publisher.Publish(context.Background(), queueName, msg)
 	if err != nil {
 		panic(err.Error())
 	}
 
-	fmt.Println("Message published with ID:", msgId)
+	fmt.Println("Message published with ID:", msgID)
 }
 
 func (s *Service) consumerJob(ctx context.Context) {

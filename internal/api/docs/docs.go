@@ -188,13 +188,13 @@ const docTemplate = `{
                     "example": "42"
                 },
                 "status": {
-                    "description": "Статус расчёта начисления:\n* REGISTERED - заказ зарегистрирован, но вознаграждение не рассчитано;\n* INVALID - заказ не принят к расчёту, и вознаграждение не будет начислено;\n* PROCESSING - расчёт начисления в процессе;\n* PROCESSED - расчёт начисления окончен;",
+                    "description": "Статус расчёта начисления:\n* NEW - заказ загружен в систему, но не попал в обработку;\n* PROCESSING - вознаграждение за заказ рассчитывается;\n* INVALID - система расчёта вознаграждений отказала в расчёте;\n* PROCESSED -  данные по заказу проверены и информация о расчёте успешно получена;",
                     "type": "string",
                     "enum": [
-                        "REGISTERED",
-                        "INVALID",
+                        "NEW",
                         "PROCESSING",
-                        "PROCESSED"
+                        "PROCESSED",
+                        "INVALID"
                     ],
                     "example": "PROCESSING"
                 },
@@ -240,7 +240,7 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
-	Host:             "localhost:8080",
+	Host:             "",
 	BasePath:         "/",
 	Schemes:          []string{},
 	Title:            "Gophermart API",

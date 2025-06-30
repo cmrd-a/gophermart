@@ -5,12 +5,12 @@ import (
 
 	"github.com/cmrd-a/gophermart/internal/config"
 	"github.com/cmrd-a/gophermart/internal/domain"
-	pgx "github.com/jackc/pgx/v5"
-	pgconn "github.com/jackc/pgx/v5/pgconn"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type PgxIface interface {
+type Pgxer interface {
 	Begin(context.Context) (pgx.Tx, error)
 	Exec(context.Context, string, ...any) (pgconn.CommandTag, error)
 	QueryRow(context.Context, string, ...any) pgx.Row
@@ -20,42 +20,11 @@ type PgxIface interface {
 }
 
 type Repository struct {
-	PgxIface
+	Pgxer
 }
 
 func NewRepository() (*Repository, error) {
 	pool, err := pgxpool.New(context.Background(), config.Config.DatabaseURI)
-	if err != nil {
-		return nil, err
-	}
-	_, err = pool.Exec(context.Background(), `
-		CREATE TABLE IF NOT EXISTS users
-		(
-			id       BIGSERIAL PRIMARY KEY,
-			login    text NOT NULL,
-			password text NOT NULL
-		)
-	`)
-	if err != nil {
-		return nil, err
-	}
-	_, err = pool.Exec(context.Background(), `
-		CREATE UNIQUE INDEX IF NOT EXISTS users_login_uindex
-		ON users (login)
-	`)
-	if err != nil {
-		return nil, err
-	}
-	_, err = pool.Exec(context.Background(), `
-		CREATE TABLE IF NOT EXISTS orders
-		(
-			number   text PRIMARY KEY,
-			status   text NOT NULL,
-			accrual  bigint default 0,
-			uploaded_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-			user_id  bigint NOT NULL
-		)
-	`)
 	if err != nil {
 		return nil, err
 	}

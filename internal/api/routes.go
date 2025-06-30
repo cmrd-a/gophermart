@@ -9,6 +9,7 @@ import (
 	"github.com/cmrd-a/gophermart/internal/service"
 	"github.com/gin-gonic/gin"
 	"github.com/swaggo/swag/example/celler/httputil"
+	"github.com/theplant/luhn"
 )
 
 // UserRegister регистрирует нового пользователя
@@ -74,7 +75,7 @@ func PostUserOrders(svc *service.Service) func(c *gin.Context) {
 			httputil.NewError(c, http.StatusBadRequest, err)
 			return
 		}
-		if !service.Valid(orderNumberInt) {
+		if !luhn.Valid(orderNumberInt) {
 			httputil.NewError(c, http.StatusUnprocessableEntity, errors.New("invalid order number"))
 			return
 		}

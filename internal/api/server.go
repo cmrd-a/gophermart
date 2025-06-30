@@ -1,6 +1,8 @@
 package api
 
 import (
+	"log"
+
 	_ "github.com/cmrd-a/gophermart/internal/api/docs"
 	"github.com/cmrd-a/gophermart/internal/api/middleware"
 	"github.com/cmrd-a/gophermart/internal/service"
@@ -16,6 +18,10 @@ import (
 
 func SetupRouter(svc *service.Service) *gin.Engine {
 	r := gin.Default()
+	err := r.SetTrustedProxies(nil)
+	if err != nil {
+		log.Printf("error on set trusted proxies:%e", err)
+	}
 
 	r.POST("/api/user/register", UserRegister(svc))
 	authorized := r.Group("/")

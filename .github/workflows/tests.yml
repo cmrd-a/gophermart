@@ -52,6 +52,6 @@ jobs:
         done
 
     - name: Run tests
-      run: make test
+      run: go test ./... -v
       env:
         DATABASE_URI: postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable

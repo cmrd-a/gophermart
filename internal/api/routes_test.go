@@ -23,7 +23,7 @@ func TestUserRegisterRoute(t *testing.T) {
 	defer mock.Close()
 
 	config.InitConfig()
-	repo := repository.Repository{PgxIface: mock}
+	repo := repository.Repository{Pgxer: mock}
 	svc := service.NewService(context.TODO(), repo)
 	router := SetupRouter(svc)
 

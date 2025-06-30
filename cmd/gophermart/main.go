@@ -4,6 +4,8 @@ import (
 	"context"
 	"log"
 
+	"github.com/cmrd-a/gophermart/migrations"
+
 	"github.com/cmrd-a/gophermart/internal/api"
 	"github.com/cmrd-a/gophermart/internal/config"
 	"github.com/cmrd-a/gophermart/internal/repository"
@@ -12,6 +14,7 @@ import (
 
 func main() {
 	config.InitConfig()
+	migrations.Migrate()
 	repo, _ := repository.NewRepository()
 	svc := service.NewService(context.TODO(), *repo)
 	r := api.SetupRouter(svc)

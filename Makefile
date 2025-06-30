@@ -1,5 +1,8 @@
-.PHONY: build test generate fmt lint tidy check cover cover-html cover-cli mock run swag
+.PHONY: build test generate fmt lint tidy check cover cover-html cover-cli mock run swag system-deps
 .SILENT: cover
+
+include .env
+export
 
 build:
 	CGO_ENABLED=0 go build -buildvcs=false -o ./bin/gophermart ./cmd/gophermart
@@ -40,3 +43,7 @@ swag:
 
 run:build
 	./bin/gophermart
+
+system-deps:
+	go install github.com/swaggo/swag/cmd/swag@latest
+	go install github.com/pressly/goose/v3/cmd/goose@latest

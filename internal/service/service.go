@@ -17,6 +17,8 @@ import (
 	"go.dataddo.com/pgq"
 )
 
+var queueName = "order_queue"
+
 type Service struct {
 	ctx  context.Context
 	repo repository.Repository
@@ -106,16 +108,15 @@ func (s *Service) consumerJob(ctx context.Context) {
 	}
 }
 
-// we must specify the message handler, which implements simple interface
-type handler struct {
+type Handler struct {
 	repo repository.Repository
 }
 
-func NewHandler(repo repository.Repository) *handler {
-	return &handler{repo: repo}
+func NewHandler(repo repository.Repository) *Handler {
+	return &Handler{repo: repo}
 }
 
-func (h *handler) HandleMessage(ctx context.Context, msg *pgq.MessageIncoming) (processed bool, err error) {
+func (h *Handler) HandleMessage(ctx context.Context, msg *pgq.MessageIncoming) (processed bool, err error) {
 	fmt.Println("Message payload:", string(msg.Payload))
 
 	// Parse the JSON payload to extract order_id

@@ -98,7 +98,7 @@ func (s *Service) consumerJob(ctx context.Context) {
 
 	// create the consumer which gets attached to handling function we defined above
 	h := NewHandler(s.repo)
-	consumer, err := pgq.NewConsumer(db, queueName, h)
+	consumer, err := pgq.NewConsumer(db, queueName, h, pgq.WithMaxConsumeCount(99))
 	if err != nil {
 		panic(err.Error())
 	}

@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"net/http"
 
 	"github.com/cmrd-a/gophermart/internal/accrual"
 	"github.com/cmrd-a/gophermart/internal/config"
@@ -118,8 +119,6 @@ func NewHandler(repo repository.Repository) *Handler {
 
 func (h *Handler) HandleMessage(ctx context.Context, msg *pgq.MessageIncoming) (processed bool, err error) {
 	fmt.Println("Message payload:", string(msg.Payload))
-
-	// Parse the JSON payload to extract order_id
 	var payload struct {
 		OrderNumber string `json:"order_number"`
 	}
@@ -133,25 +132,64 @@ func (h *Handler) HandleMessage(ctx context.Context, msg *pgq.MessageIncoming) (
 	if err != nil {
 		return false, err
 	}
-	if order.Status == string(domain.NEW) {
-		err := h.repo.UpdateOrderStatus(ctx, payload.OrderNumber, string(domain.PROCESSING))
+	switch order.Status {
+	case string(domain.NEW):
+		err = h.repo.UpdateOrderStatus(ctx, payload.OrderNumber, string(domain.PROCESSING))
 		if err != nil {
 			return false, err
 		}
-		as, acc, err := accrual.GetAccrual(payload.OrderNumber)
-		if err != nil {
-			return false, err
-		}
-		if as == accrual.REGISTERED {
-			return false, nil
-		}
-		if acc > 0 {
-			err = h.repo.UpdateOrderAccrualStatus(ctx, payload.OrderNumber, acc, string(domain.PROCESSED))
-			if err != nil {
-				return false, err
-			}
-		}
+		return h.processRequest(ctx, payload.OrderNumber)
+	case string(domain.PROCESSING):
+		return h.processRequest(ctx, payload.OrderNumber)
+	case string(domain.PROCESSED):
+		return true, nil
+	case string(domain.INVALID):
+		return true, nil
 	}
 
 	return true, nil
+}
+func (h *Handler) processRequest(ctx context.Context, orderNumber string) (processed bool, err error) {
+	client := accrual.NewClient()
+	acc, statusCode, err := client.GetOrderInfo(orderNumber)
+	if err != nil {
+		return false, err
+	}
+	switch statusCode {
+	case http.StatusOK:
+		return h.processSuccessResponse(ctx, acc)
+	case http.StatusNoContent:
+		err = h.repo.UpdateOrderStatus(ctx, acc.Order, string(domain.PROCESSED))
+		if err != nil {
+			return false, err
+		}
+		return true, nil
+	case http.StatusTooManyRequests:
+		return false, nil //TODO:  Retry-After: 60
+	case http.StatusInternalServerError:
+		return false, nil
+	}
+	return false, nil
+}
+
+func (h *Handler) processSuccessResponse(ctx context.Context, acc accrual.OrderInfoResponse) (processed bool, err error) {
+	switch acc.Status {
+	case string(accrual.REGISTERED):
+		return false, nil
+	case string(accrual.INVALID):
+		err = h.repo.UpdateOrderStatus(ctx, acc.Order, string(domain.INVALID))
+		if err != nil {
+			return false, err
+		}
+		return true, err
+	case string(accrual.PROCESSING):
+		return false, nil
+	case string(accrual.PROCESSED):
+		err = h.repo.UpdateOrderAccrualStatus(ctx, acc.Order, acc.Accrual, string(domain.PROCESSED))
+		if err != nil {
+			return false, err
+		}
+		return true, nil
+	}
+	return false, nil
 }

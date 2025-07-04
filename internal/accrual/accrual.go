@@ -6,7 +6,13 @@ import (
 	"resty.dev/v3"
 )
 
-func GetAccrual(orderNumber string) (AccrualStatus, int64, error) {
+type Client struct{}
+
+func NewClient() *Client {
+	return &Client{}
+}
+
+func (c *Client) GetOrderInfo(orderNumber string) (acc OrderInfoResponse, statusCode int, err error) {
 	client := resty.New()
 	defer func() {
 		if closeErr := client.Close(); closeErr != nil {
@@ -15,7 +21,10 @@ func GetAccrual(orderNumber string) (AccrualStatus, int64, error) {
 	}()
 	client.SetBaseURL("http://localhost:8080")
 
-	res, err := client.R().SetPathParam("orderNumber", orderNumber).Get("/api/orders/{orderNumber}")
-	fmt.Println(res.StatusCode())
-	return UNSPECIFIED, 0, err
+	statusCode = 0
+	res, err := client.R().SetPathParam("orderNumber", orderNumber).SetResult(&acc).Get("/api/orders/{orderNumber}")
+	if res != nil {
+		statusCode = res.StatusCode()
+	}
+	return acc, statusCode, err
 }

@@ -1,16 +1,16 @@
 package accrual
 
-type AccrualStatus string
+type Status string
 
 const (
-	UNSPECIFIED AccrualStatus = "UNSPECIFIED" //статус не определён
-	REGISTERED  AccrualStatus = "REGISTERED"  //заказ зарегистрирован, но вознаграждение не рассчитано
-	INVALID     AccrualStatus = "INVALID"     //заказ не принят к расчёту, и вознаграждение не будет начислено
-	PROCESSING  AccrualStatus = "PROCESSING"  //расчёт начисления в процессе
-	PROCESSED   AccrualStatus = "PROCESSED"   //расчёт начисления окончен
+	UNSPECIFIED Status = "UNSPECIFIED" //статус не определён
+	REGISTERED  Status = "REGISTERED"  //заказ зарегистрирован, но вознаграждение не рассчитано
+	INVALID     Status = "INVALID"     //заказ не принят к расчёту, и вознаграждение не будет начислено
+	PROCESSING  Status = "PROCESSING"  //расчёт начисления в процессе
+	PROCESSED   Status = "PROCESSED"   //расчёт начисления окончен
 )
 
-type Accrual struct {
+type OrderInfoResponse struct {
 	Order   string `json:"order"`
 	Status  string `json:"status"`
 	Accrual int64  `json:"accrual,omitempty"`

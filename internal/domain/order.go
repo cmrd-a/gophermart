@@ -2,13 +2,13 @@ package domain
 
 import "time"
 
-type orderStatus string
+type Status string
 
 const (
-	NEW        orderStatus = "NEW"
-	PROCESSING orderStatus = "PROCESSING"
-	PROCESSED  orderStatus = "PROCESSED"
-	INVALID    orderStatus = "INVALID"
+	NEW        Status = "NEW"
+	PROCESSING Status = "PROCESSING"
+	PROCESSED  Status = "PROCESSED"
+	INVALID    Status = "INVALID"
 )
 
 type Order struct {

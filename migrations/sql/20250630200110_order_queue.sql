@@ -11,12 +11,11 @@ CREATE TABLE IF NOT EXISTS "order_queue"
     consumed_count INTEGER     DEFAULT 0                 NOT NULL,
     error_detail   TEXT                                  NULL,
     payload        JSONB                                 NOT NULL,
-    metadata       JSONB                                 NOT NULL
+    metadata       JSONB                                 NULL
 );
 CREATE INDEX IF NOT EXISTS "order_queue_created_at_idx" ON "order_queue" (created_at);
 CREATE INDEX IF NOT EXISTS "order_queue_processed_at_null_idx" ON "order_queue" (processed_at) WHERE (processed_at IS NULL);
 CREATE INDEX IF NOT EXISTS "order_queue_scheduled_for_idx" ON "order_queue" (scheduled_for ASC NULLS LAST) WHERE (processed_at IS NULL);
-CREATE INDEX IF NOT EXISTS "order_queue_metadata_idx" ON "order_queue" USING GIN(metadata) WHERE processed_at IS NULL;
 -- +goose StatementEnd
 
 -- +goose Down

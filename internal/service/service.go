@@ -134,7 +134,7 @@ func (h *Handler) HandleMessage(ctx context.Context, msg *pgq.MessageIncoming) (
 	}
 	switch order.Status {
 	case string(domain.NEW):
-		err = h.repo.UpdateOrderStatus(ctx, payload.OrderNumber, string(domain.PROCESSING))
+		err = h.repo.UpdateOrderStatus(ctx, payload.OrderNumber, domain.PROCESSING)
 		if err != nil {
 			return false, err
 		}
@@ -159,7 +159,7 @@ func (h *Handler) processRequest(ctx context.Context, orderNumber string) (proce
 	case http.StatusOK:
 		return h.processSuccessResponse(ctx, acc)
 	case http.StatusNoContent:
-		err = h.repo.UpdateOrderStatus(ctx, acc.Order, string(domain.PROCESSED))
+		err = h.repo.UpdateOrderStatus(ctx, acc.Order, domain.PROCESSED)
 		if err != nil {
 			return false, err
 		}
@@ -177,7 +177,7 @@ func (h *Handler) processSuccessResponse(ctx context.Context, acc accrual.OrderI
 	case string(accrual.REGISTERED):
 		return false, nil
 	case string(accrual.INVALID):
-		err = h.repo.UpdateOrderStatus(ctx, acc.Order, string(domain.INVALID))
+		err = h.repo.UpdateOrderStatus(ctx, acc.Order, domain.INVALID)
 		if err != nil {
 			return false, err
 		}
@@ -185,7 +185,7 @@ func (h *Handler) processSuccessResponse(ctx context.Context, acc accrual.OrderI
 	case string(accrual.PROCESSING):
 		return false, nil
 	case string(accrual.PROCESSED):
-		err = h.repo.UpdateOrderAccrualStatus(ctx, acc.Order, acc.Accrual, string(domain.PROCESSED))
+		err = h.repo.UpdateOrderAccrualStatus(ctx, acc.Order, acc.Accrual, domain.PROCESSED)
 		if err != nil {
 			return false, err
 		}

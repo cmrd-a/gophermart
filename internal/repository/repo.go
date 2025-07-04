@@ -38,7 +38,7 @@ func (r *Repository) InsertUser(ctx context.Context, login, password string) (in
 }
 
 func (r *Repository) AddOrder(ctx context.Context, orderNumber string, userID int64) error {
-	_, err := r.Exec(ctx, "INSERT INTO orders (number, status, user_id) VALUES ($1, $2, $3)", orderNumber, "REGISTERED", userID)
+	_, err := r.Exec(ctx, "INSERT INTO orders (number, status, user_id) VALUES ($1, $2, $3)", orderNumber, string(domain.NEW), userID)
 	return err
 }
 
@@ -68,12 +68,12 @@ func (r *Repository) GetUserOrders(ctx context.Context, userID int64) ([]domain.
 	return orders, nil
 }
 
-func (r *Repository) UpdateOrderStatus(ctx context.Context, orderNumber string, status string) error {
-	_, err := r.Exec(ctx, "UPDATE orders SET status = $1 WHERE number = $2", status, orderNumber)
+func (r *Repository) UpdateOrderStatus(ctx context.Context, orderNumber string, status domain.Status) error {
+	_, err := r.Exec(ctx, "UPDATE orders SET status = $1 WHERE number = $2", string(status), orderNumber)
 	return err
 }
 
-func (r *Repository) UpdateOrderAccrualStatus(ctx context.Context, orderNumber string, accrual int64, status string) error {
-	_, err := r.Exec(ctx, "UPDATE orders SET accrual = $1, status = $2 WHERE number = $3", accrual, status, orderNumber)
+func (r *Repository) UpdateOrderAccrualStatus(ctx context.Context, orderNumber string, accrual int64, status domain.Status) error {
+	_, err := r.Exec(ctx, "UPDATE orders SET accrual = $1, status = $2 WHERE number = $3", accrual, string(status), orderNumber)
 	return err
 }

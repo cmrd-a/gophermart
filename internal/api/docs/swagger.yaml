@@ -118,8 +118,6 @@ paths:
       responses:
         "200":
           description: успешная обработка запроса
-          schema:
-            $ref: '#/definitions/api.BalanceResponse'
         "401":
           description: пользователь не авторизован
           schema:

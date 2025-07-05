@@ -43,21 +43,25 @@ func (r *Repository) GetUserID(ctx context.Context, login, password string) (id 
 }
 
 func (r *Repository) AddOrder(ctx context.Context, orderNumber string, userID int64) error {
-	_, err := r.Exec(ctx, "INSERT INTO orders (number, status, user_id) VALUES ($1, $2, $3)", orderNumber, string(domain.NEW), userID)
+	q := "INSERT INTO orders (number, status, user_id) VALUES ($1, $2, $3)"
+	_, err := r.Exec(ctx, q, orderNumber, string(domain.NEW), userID)
 	return err
 }
 
 func (r *Repository) GetOrder(ctx context.Context, orderNumber string) (order domain.Order, err error) {
-	err = r.QueryRow(ctx, "SELECT number, status, accrual, uploaded_at, user_id FROM orders WHERE number = $1", orderNumber).Scan(&order.Number, &order.Status, &order.Accrual, &order.UploadedAt, &order.UserID)
+	q := "SELECT number, status, accrual, uploaded_at, user_id FROM orders WHERE number = $1"
+	err = r.QueryRow(ctx, q, orderNumber).Scan(&order.Number, &order.Status, &order.Accrual, &order.UploadedAt, &order.UserID)
 	return order, err
 }
 
 func (r *Repository) GetUserOrder(ctx context.Context, userID int64, orderNumber string) (order domain.Order, err error) {
-	err = r.QueryRow(ctx, "SELECT number, status, accrual, uploaded_at, user_id FROM orders WHERE user_id=$1 AND number = $2", userID, orderNumber).Scan(&order.Number, &order.Status, &order.Accrual, &order.UploadedAt, &order.UserID)
+	q := "SELECT number, status, accrual, uploaded_at, user_id FROM orders WHERE user_id=$1 AND number = $2"
+	err = r.QueryRow(ctx, q, userID, orderNumber).Scan(&order.Number, &order.Status, &order.Accrual, &order.UploadedAt, &order.UserID)
 	return order, err
 }
 func (r *Repository) GetUserOrders(ctx context.Context, userID int64) ([]domain.Order, error) {
-	rows, err := r.Query(ctx, "SELECT number, status, accrual, uploaded_at, user_id FROM orders WHERE user_id = $1", userID)
+	q := "SELECT number, status, accrual, uploaded_at, user_id FROM orders WHERE user_id = $1"
+	rows, err := r.Query(ctx, q, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -82,7 +86,8 @@ func (r *Repository) UpdateOrderStatus(ctx context.Context, orderNumber string, 
 }
 
 func (r *Repository) UpdateOrderAccrualStatus(ctx context.Context, orderNumber string, accrual decimal.Decimal, status domain.Status) error {
-	_, err := r.Exec(ctx, "UPDATE orders SET accrual = $1, status = $2 WHERE number = $3", accrual, string(status), orderNumber)
+	q := "UPDATE orders SET accrual = $1, status = $2 WHERE number = $3"
+	_, err := r.Exec(ctx, q, accrual, string(status), orderNumber)
 	return err
 }
 

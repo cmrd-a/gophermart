@@ -87,10 +87,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "успешная обработка запроса",
-                        "schema": {
-                            "$ref": "#/definitions/api.BalanceResponse"
-                        }
+                        "description": "успешная обработка запроса"
                     },
                     "401": {
                         "description": "пользователь не авторизован",

@@ -70,7 +70,15 @@ func (s *Service) GetUserBalance(ctx context.Context, userID int64) (domain.Bala
 	return s.repo.GetUserBalance(ctx, userID)
 }
 func (s *Service) WithdrawUserBalance(ctx context.Context, orderNumber string, userID int64, withdraw decimal.Decimal) error {
-	order, err := s.repo.GetUserOrder(ctx, userID, orderNumber)
+	order, err := s.repo.GetOrder(ctx, orderNumber)
+	if err != nil {
+		return err
+	}
+	empty := domain.Order{}
+	if order != empty {
+		return errors.New("old order")
+	}
+	err = s.AddOrder(ctx, orderNumber, userID)
 	if err != nil {
 		return err
 	}

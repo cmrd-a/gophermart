@@ -24,6 +24,7 @@ func SetupRouter(svc *service.Service) *gin.Engine {
 	}
 
 	r.POST("/api/user/register", UserRegister(svc))
+	r.POST("/api/user/login", UserLogin(svc))
 	authorized := r.Group("/")
 	authorized.Use(middleware.Auth())
 	authorized.POST("/api/user/orders", PostUserOrders(svc))

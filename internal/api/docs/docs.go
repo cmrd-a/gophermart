@@ -15,6 +15,60 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/api/user/login": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Аутентификация пользователя",
+                "parameters": [
+                    {
+                        "description": "данные пользователя для регистрации",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.LoginPasswordRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "пользователь успешно аутентифицирован",
+                        "headers": {
+                            "Authorization": {
+                                "type": "string",
+                                "description": "токен авторизации"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "неверный формат запроса",
+                        "schema": {
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "неверная пара логин/пароль",
+                        "schema": {
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "внутренняя ошибка сервера",
+                        "schema": {
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
         "/api/user/orders": {
             "get": {
                 "produces": [
@@ -139,7 +193,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.UserRegisterRequest"
+                            "$ref": "#/definitions/api.LoginPasswordRequest"
                         }
                     }
                 ],
@@ -176,6 +230,23 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "api.LoginPasswordRequest": {
+            "type": "object",
+            "required": [
+                "login",
+                "password"
+            ],
+            "properties": {
+                "login": {
+                    "type": "string",
+                    "example": "user@example.com"
+                },
+                "password": {
+                    "type": "string",
+                    "example": "password"
+                }
+            }
+        },
         "api.Order": {
             "type": "object",
             "properties": {
@@ -201,23 +272,6 @@ const docTemplate = `{
                 "uploaded_at": {
                     "type": "string",
                     "example": "2025-06-23T23:48:45+03:00"
-                }
-            }
-        },
-        "api.UserRegisterRequest": {
-            "type": "object",
-            "required": [
-                "login",
-                "password"
-            ],
-            "properties": {
-                "login": {
-                    "type": "string",
-                    "example": "user@example.com"
-                },
-                "password": {
-                    "type": "string",
-                    "example": "password"
                 }
             }
         },

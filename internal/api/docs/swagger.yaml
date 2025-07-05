@@ -1,5 +1,17 @@
 basePath: /
 definitions:
+  api.LoginPasswordRequest:
+    properties:
+      login:
+        example: user@example.com
+        type: string
+      password:
+        example: password
+        type: string
+    required:
+    - login
+    - password
+    type: object
   api.Order:
     properties:
       accrual:
@@ -26,18 +38,6 @@ definitions:
         example: "2025-06-23T23:48:45+03:00"
         type: string
     type: object
-  api.UserRegisterRequest:
-    properties:
-      login:
-        example: user@example.com
-        type: string
-      password:
-        example: password
-        type: string
-    required:
-    - login
-    - password
-    type: object
   httputil.HTTPError:
     properties:
       code:
@@ -53,6 +53,41 @@ info:
   title: Gophermart API
   version: "1.0"
 paths:
+  /api/user/login:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: данные пользователя для регистрации
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.LoginPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: пользователь успешно аутентифицирован
+          headers:
+            Authorization:
+              description: токен авторизации
+              type: string
+        "400":
+          description: неверный формат запроса
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+        "401":
+          description: неверная пара логин/пароль
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+        "500":
+          description: внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+      summary: Аутентификация пользователя
+      tags:
+      - auth
   /api/user/orders:
     get:
       parameters:
@@ -132,7 +167,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/api.UserRegisterRequest'
+          $ref: '#/definitions/api.LoginPasswordRequest'
       produces:
       - application/json
       responses:

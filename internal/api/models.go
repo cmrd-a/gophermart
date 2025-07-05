@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-type UserRegisterRequest struct {
+type LoginPasswordRequest struct {
 	Login    string `json:"login" example:"user@example.com" binding:"required"`
 	Password string `json:"password" example:"password" binding:"required"`
 }

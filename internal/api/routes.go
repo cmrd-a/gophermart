@@ -16,7 +16,7 @@ import (
 //
 //	@Summary	Регистрация пользователя
 //	@Tags		auth
-//	@Param		request	body	UserRegisterRequest	true	"данные пользователя для регистрации"
+//	@Param		request	body	LoginPasswordRequest	true	"данные пользователя для регистрации"
 //	@Accept		json
 //	@Produce	json
 //	@Success	200	"пользователь успешно зарегистрирован и аутентифицирован"
@@ -27,7 +27,7 @@ import (
 //	@Router		/api/user/register [post]
 func UserRegister(svc *service.Service) func(c *gin.Context) {
 	return func(c *gin.Context) {
-		r := UserRegisterRequest{}
+		r := LoginPasswordRequest{}
 		if err := c.BindJSON(&r); err != nil {
 			c.String(http.StatusOK, err.Error())
 		}
@@ -37,6 +37,38 @@ func UserRegister(svc *service.Service) func(c *gin.Context) {
 			return
 		}
 		c.Header("Authorization", strconv.Itoa(int(userID)))
+	}
+}
+
+// UserLogin регистрирует нового пользователя
+//
+//	@Summary	Аутентификация пользователя
+//	@Tags		auth
+//	@Param		request	body	LoginPasswordRequest	true	"данные пользователя для регистрации"
+//	@Accept		json
+//	@Produce	json
+//	@Success	200	"пользователь успешно аутентифицирован"
+//	@Failure	400	{object}	httputil.HTTPError	"неверный формат запроса"
+//	@Failure	401	{object}	httputil.HTTPError	"неверная пара логин/пароль"
+//	@Failure	500	{object}	httputil.HTTPError	"внутренняя ошибка сервера"
+//	@Header		200	string		Authorization		"токен авторизации"
+//	@Router		/api/user/login [post]
+func UserLogin(svc *service.Service) func(c *gin.Context) {
+	return func(c *gin.Context) {
+		r := LoginPasswordRequest{}
+		if err := c.BindJSON(&r); err != nil {
+			c.String(http.StatusOK, err.Error())
+		}
+		userID, err := svc.CheckLoginPassword(c, r.Login, r.Password)
+		if err != nil {
+			httputil.NewError(c, http.StatusBadRequest, err)
+			return
+		}
+		if userID > 0 {
+			c.Header("Authorization", strconv.Itoa(int(userID)))
+			return
+		}
+		httputil.NewError(c, http.StatusUnauthorized, errors.New("invalid login/password pair"))
 	}
 }
 

@@ -31,9 +31,12 @@ func NewRepository() (*Repository, error) {
 	return &Repository{pool}, nil
 }
 
-func (r *Repository) InsertUser(ctx context.Context, login, password string) (int64, error) {
-	var id int64
-	err := r.QueryRow(ctx, "INSERT INTO users (login, password) VALUES ($1, $2) RETURNING id", login, password).Scan(&id)
+func (r *Repository) InsertUser(ctx context.Context, login, password string) (id int64, err error) {
+	err = r.QueryRow(ctx, "INSERT INTO users (login, password) VALUES ($1, $2) RETURNING id", login, password).Scan(&id)
+	return id, err
+}
+func (r *Repository) GetUserID(ctx context.Context, login, password string) (id int64, err error) {
+	err = r.QueryRow(ctx, "SELECT id FROM users WHERE login=$1 AND password=$2", login, password).Scan(&id)
 	return id, err
 }
 
@@ -42,9 +45,8 @@ func (r *Repository) AddOrder(ctx context.Context, orderNumber string, userID in
 	return err
 }
 
-func (r *Repository) GetOrder(ctx context.Context, orderNumber string) (domain.Order, error) {
-	var order domain.Order
-	err := r.QueryRow(ctx, "SELECT number, status, accrual, uploaded_at, user_id FROM orders WHERE number = $1", orderNumber).Scan(&order.Number, &order.Status, &order.Accrual, &order.UploadedAt, &order.UserID)
+func (r *Repository) GetOrder(ctx context.Context, orderNumber string) (order domain.Order, err error) {
+	err = r.QueryRow(ctx, "SELECT number, status, accrual, uploaded_at, user_id FROM orders WHERE number = $1", orderNumber).Scan(&order.Number, &order.Status, &order.Accrual, &order.UploadedAt, &order.UserID)
 	return order, err
 }
 

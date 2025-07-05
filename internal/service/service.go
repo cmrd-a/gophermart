@@ -3,7 +3,10 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
+
+	"github.com/jackc/pgx/v5"
 
 	"github.com/cmrd-a/gophermart/internal/accrual"
 	"github.com/cmrd-a/gophermart/internal/config"
@@ -31,8 +34,16 @@ func NewService(ctx context.Context, repo repository.Repository) *Service {
 	return s
 }
 
-func (s *Service) AddUser(ctx context.Context, login string, password string) (int64, error) {
-	return s.repo.InsertUser(ctx, login, password)
+func (s *Service) AddUser(ctx context.Context, login string, password string) (userID int64, err error) {
+	return s.repo.InsertUser(ctx, login, password) //TODO: хэш, соль, bcrypt
+}
+
+func (s *Service) CheckLoginPassword(ctx context.Context, login string, password string) (userID int64, err error) {
+	userID, err = s.repo.GetUserID(ctx, login, password)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return 0, nil
+	}
+	return userID, err
 }
 
 func (s *Service) AddOrder(ctx context.Context, orderNumber string, userID int64) error {

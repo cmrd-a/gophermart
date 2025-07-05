@@ -194,7 +194,10 @@ func GetUserBalance(svc *service.Service) func(c *gin.Context) {
 //
 //	@Summary	Запрос на списание средств
 //	@Tags		balance
-//	@Failure	401	{object}	httputil.HTTPError	"пользователь не авторизован"
+//	@Failure	400	{object}	httputil.HTTPError	"неверный формат запроса"
+//	@Failure	401	{object}	httputil.HTTPError	"пользователь не аутентифицирован"
+//	@Failure	409	{object}	httputil.HTTPError	"номер заказа уже был загружен другим пользователем"
+//	@Failure	422	{object}	httputil.HTTPError	"неверный формат номера заказа"
 //	@Failure	402	{object}	httputil.HTTPError	"на счету недостаточно средств"
 //	@Failure	402	{object}	httputil.HTTPError	"неверный номер заказа"
 //	@Failure	500	{object}	httputil.HTTPError	"внутренняя ошибка сервера"
@@ -212,7 +215,16 @@ func UserBalanceWithdraw(svc *service.Service) func(c *gin.Context) {
 		if err := c.BindJSON(&r); err != nil {
 			c.String(http.StatusOK, err.Error())
 		}
-		err := svc.WithdrawUserBalance(c, r.Order, userID, decimal.NewFromFloat(r.Sum))
+		orderNumberInt, err := strconv.Atoi(r.Order)
+		if err != nil {
+			httputil.NewError(c, http.StatusBadRequest, err)
+			return
+		}
+		if !luhn.Valid(orderNumberInt) {
+			httputil.NewError(c, http.StatusUnprocessableEntity, errors.New("invalid order number"))
+			return
+		}
+		err = svc.WithdrawUserBalance(c, r.Order, userID, decimal.NewFromFloat(r.Sum))
 		if err != nil {
 			httputil.NewError(c, http.StatusInternalServerError, err)
 			return

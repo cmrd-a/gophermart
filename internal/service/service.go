@@ -71,7 +71,7 @@ func (s *Service) GetUserBalance(ctx context.Context, userID int64) (domain.Bala
 }
 func (s *Service) WithdrawUserBalance(ctx context.Context, orderNumber string, userID int64, withdraw decimal.Decimal) error {
 	order, err := s.repo.GetOrder(ctx, orderNumber)
-	if err != nil {
+	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
 		return err
 	}
 	empty := domain.Order{}

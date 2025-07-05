@@ -118,12 +118,24 @@ paths:
       responses:
         "200":
           description: успешная обработка запроса
+        "400":
+          description: неверный формат запроса
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
         "401":
-          description: пользователь не авторизован
+          description: пользователь не аутентифицирован
           schema:
             $ref: '#/definitions/httputil.HTTPError'
         "402":
           description: неверный номер заказа
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+        "409":
+          description: номер заказа уже был загружен другим пользователем
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+        "422":
+          description: неверный формат номера заказа
           schema:
             $ref: '#/definitions/httputil.HTTPError'
         "500":

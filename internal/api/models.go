@@ -23,10 +23,15 @@ type Order struct {
 	// * NEW - заказ загружен в систему, но не попал в обработку;
 	// * PROCESSING - вознаграждение за заказ рассчитывается;
 	// * INVALID - система расчёта вознаграждений отказала в расчёте;
-	// * PROCESSED -  данные по заказу проверены и информация о расчёте успешно получена;
+	// * PROCESSED - данные по заказу проверены и информация о расчёте успешно получена;
 	Status     string   `json:"status" example:"PROCESSING" enums:"NEW,PROCESSING,PROCESSED,INVALID"`
-	Accrual    int64    `json:"accrual,omitempty" example:"500"`
+	Accrual    float64  `json:"accrual,omitempty" example:"500"`
 	UploadedAt JSONTime `json:"uploaded_at" example:"2025-06-23T23:48:45+03:00"`
 }
 
 type Orders []Order
+
+type BalanceResponse struct {
+	Current   float64 `json:"current" example:"500.5"`
+	Withdrawn float64 `json:"withdrawn" example:"42"`
+}

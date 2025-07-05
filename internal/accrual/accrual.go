@@ -15,7 +15,7 @@ func NewClient() *Client {
 }
 
 func (c *Client) GetOrderInfo(orderNumber string) (acc OrderInfoResponse, statusCode int, err error) {
-	client := resty.New()
+	client := resty.New().SetDebug(true)
 	defer func() {
 		if closeErr := client.Close(); closeErr != nil {
 			fmt.Printf("Warning: failed to close client: %v\n", closeErr)

@@ -15,6 +15,46 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/api/user/balance": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "balance"
+                ],
+                "summary": "Получение текущего баланса пользователя",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "токен авторизации",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "успешная обработка запроса",
+                        "schema": {
+                            "$ref": "#/definitions/api.BalanceResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "пользователь не авторизован",
+                        "schema": {
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "внутренняя ошибка сервера",
+                        "schema": {
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
         "/api/user/login": {
             "post": {
                 "consumes": [
@@ -230,6 +270,19 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "api.BalanceResponse": {
+            "type": "object",
+            "properties": {
+                "current": {
+                    "type": "number",
+                    "example": 500.5
+                },
+                "withdrawn": {
+                    "type": "number",
+                    "example": 42
+                }
+            }
+        },
         "api.LoginPasswordRequest": {
             "type": "object",
             "required": [
@@ -251,7 +304,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "accrual": {
-                    "type": "integer",
+                    "type": "number",
                     "example": 500
                 },
                 "number": {
@@ -259,7 +312,7 @@ const docTemplate = `{
                     "example": "42"
                 },
                 "status": {
-                    "description": "Статус расчёта начисления:\n* NEW - заказ загружен в систему, но не попал в обработку;\n* PROCESSING - вознаграждение за заказ рассчитывается;\n* INVALID - система расчёта вознаграждений отказала в расчёте;\n* PROCESSED -  данные по заказу проверены и информация о расчёте успешно получена;",
+                    "description": "Статус расчёта начисления:\n* NEW - заказ загружен в систему, но не попал в обработку;\n* PROCESSING - вознаграждение за заказ рассчитывается;\n* INVALID - система расчёта вознаграждений отказала в расчёте;\n* PROCESSED - данные по заказу проверены и информация о расчёте успешно получена;",
                     "type": "string",
                     "enum": [
                         "NEW",

@@ -1,6 +1,10 @@
 package domain
 
-import "time"
+import (
+	"time"
+
+	"github.com/shopspring/decimal"
+)
 
 type Status string
 
@@ -14,17 +18,12 @@ const (
 type Order struct {
 	Number     string
 	Status     string
-	Accrual    int64
+	Accrual    decimal.Decimal
 	UploadedAt time.Time
 	UserID     int64
 }
 
-func NewOrder(number string, status string, accrual int64, uploadedAt time.Time, userID int64) *Order {
-	return &Order{
-		Number:     number,
-		Status:     status,
-		Accrual:    accrual,
-		UploadedAt: uploadedAt,
-		UserID:     userID,
-	}
+type Balance struct {
+	Current   decimal.Decimal
+	Withdrawn decimal.Decimal
 }

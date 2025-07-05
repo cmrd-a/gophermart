@@ -158,8 +158,32 @@ func GetUserOrders(svc *service.Service) func(c *gin.Context) {
 		}
 		jo := make(Orders, len(ro))
 		for i, order := range ro {
-			jo[i] = Order{Number: order.Number, Status: order.Status, Accrual: order.Accrual, UploadedAt: JSONTime(order.UploadedAt)}
+			jo[i] = Order{Number: order.Number, Status: order.Status, Accrual: order.Accrual.InexactFloat64(), UploadedAt: JSONTime(order.UploadedAt)}
 		}
 		c.JSON(http.StatusOK, &jo)
+	}
+}
+
+// GetUserBalance возвращает текущий баланс пользователя
+//
+//	@Summary	Получение текущего баланса пользователя
+//	@Failure	401	{object}	httputil.HTTPError	"пользователь не авторизован"
+//	@Failure	500	{object}	httputil.HTTPError	"внутренняя ошибка сервера"
+//	@Tags		balance
+//	@Success	200	{object}	BalanceResponse	"успешная обработка запроса"
+//	@Produce	json
+//	@Param		Authorization	header	string	true	"токен авторизации"
+//	@Router		/api/user/balance [get]
+func GetUserBalance(svc *service.Service) func(c *gin.Context) {
+	return func(c *gin.Context) {
+		c.Header("content-type", "application/json")
+		userID := c.GetInt64("userID")
+		balance, err := svc.GetUserBalance(c, userID)
+		if err != nil {
+			httputil.NewError(c, http.StatusInternalServerError, err)
+			return
+		}
+		jb := BalanceResponse{Current: balance.Current.InexactFloat64(), Withdrawn: balance.Withdrawn.InexactFloat64()}
+		c.JSON(http.StatusOK, &jb)
 	}
 }

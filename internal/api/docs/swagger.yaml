@@ -1,5 +1,14 @@
 basePath: /
 definitions:
+  api.BalanceResponse:
+    properties:
+      current:
+        example: 500.5
+        type: number
+      withdrawn:
+        example: 42
+        type: number
+    type: object
   api.LoginPasswordRequest:
     properties:
       login:
@@ -16,7 +25,7 @@ definitions:
     properties:
       accrual:
         example: 500
-        type: integer
+        type: number
       number:
         example: "42"
         type: string
@@ -26,7 +35,7 @@ definitions:
           * NEW - заказ загружен в систему, но не попал в обработку;
           * PROCESSING - вознаграждение за заказ рассчитывается;
           * INVALID - система расчёта вознаграждений отказала в расчёте;
-          * PROCESSED -  данные по заказу проверены и информация о расчёте успешно получена;
+          * PROCESSED - данные по заказу проверены и информация о расчёте успешно получена;
         enum:
         - NEW
         - PROCESSING
@@ -53,6 +62,32 @@ info:
   title: Gophermart API
   version: "1.0"
 paths:
+  /api/user/balance:
+    get:
+      parameters:
+      - description: токен авторизации
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: успешная обработка запроса
+          schema:
+            $ref: '#/definitions/api.BalanceResponse'
+        "401":
+          description: пользователь не авторизован
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+        "500":
+          description: внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+      summary: Получение текущего баланса пользователя
+      tags:
+      - balance
   /api/user/login:
     post:
       consumes:

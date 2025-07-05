@@ -3,6 +3,8 @@ package repository
 import (
 	"context"
 
+	"github.com/shopspring/decimal"
+
 	"github.com/cmrd-a/gophermart/internal/config"
 	"github.com/cmrd-a/gophermart/internal/domain"
 	"github.com/jackc/pgx/v5"
@@ -75,7 +77,19 @@ func (r *Repository) UpdateOrderStatus(ctx context.Context, orderNumber string, 
 	return err
 }
 
-func (r *Repository) UpdateOrderAccrualStatus(ctx context.Context, orderNumber string, accrual int64, status domain.Status) error {
+func (r *Repository) UpdateOrderAccrualStatus(ctx context.Context, orderNumber string, accrual decimal.Decimal, status domain.Status) error {
 	_, err := r.Exec(ctx, "UPDATE orders SET accrual = $1, status = $2 WHERE number = $3", accrual, string(status), orderNumber)
 	return err
+}
+
+func (r *Repository) GetUserBalance(ctx context.Context, userID int64) (balance domain.Balance, err error) {
+	q := `
+	SELECT
+		COALESCE(total_accrual.sum, 0) - COALESCE(total_withdrawns.sum, 0) AS current_accrual,
+		COALESCE(total_withdrawns.sum, 0) AS total_withdrawns
+	FROM
+		(SELECT SUM(accrual) AS sum FROM orders WHERE user_id = $1) total_accrual,
+		(SELECT SUM(withdrawn) AS sum FROM withdrawns WHERE user_id = $1) total_withdrawns`
+	err = r.QueryRow(ctx, q, userID).Scan(&balance.Current, &balance.Withdrawn)
+	return balance, err
 }

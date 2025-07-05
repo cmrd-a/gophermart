@@ -29,6 +29,7 @@ func SetupRouter(svc *service.Service) *gin.Engine {
 	authorized.Use(middleware.Auth())
 	authorized.POST("/api/user/orders", PostUserOrders(svc))
 	authorized.GET("/api/user/orders", GetUserOrders(svc))
+	authorized.GET("/api/user/balance", GetUserBalance(svc))
 
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	return r

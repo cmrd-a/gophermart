@@ -6,6 +6,8 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/shopspring/decimal"
+
 	"github.com/jackc/pgx/v5"
 
 	"github.com/cmrd-a/gophermart/internal/accrual"
@@ -63,6 +65,10 @@ func (s *Service) GetUserOrders(ctx context.Context, userID int64) ([]domain.Ord
 	return s.repo.GetUserOrders(ctx, userID)
 }
 
+func (s *Service) GetUserBalance(ctx context.Context, userID int64) (domain.Balance, error) {
+	return s.repo.GetUserBalance(ctx, userID)
+}
+
 func (s *Service) Publish(orderNumber string) {
 	db, err := sql.Open("pgx", config.Config.DatabaseURI)
 	if err != nil {
@@ -109,7 +115,7 @@ func (s *Service) consumerJob(ctx context.Context) {
 
 	// create the consumer which gets attached to handling function we defined above
 	h := NewHandler(s.repo)
-	consumer, err := pgq.NewConsumer(db, queueName, h, pgq.WithMaxConsumeCount(99))
+	consumer, err := pgq.NewConsumer(db, queueName, h, pgq.WithMaxConsumeCount(3))
 	if err != nil {
 		panic(err.Error())
 	}
@@ -196,7 +202,8 @@ func (h *Handler) processSuccessResponse(ctx context.Context, acc accrual.OrderI
 	case string(accrual.PROCESSING):
 		return false, nil
 	case string(accrual.PROCESSED):
-		err = h.repo.UpdateOrderAccrualStatus(ctx, acc.Order, acc.Accrual, domain.PROCESSED)
+		d := decimal.NewFromFloat(acc.Accrual)
+		err = h.repo.UpdateOrderAccrualStatus(ctx, acc.Order, d, domain.PROCESSED)
 		if err != nil {
 			return false, err
 		}

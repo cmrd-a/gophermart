@@ -138,10 +138,10 @@ func PostUserOrders(svc *service.Service) func(c *gin.Context) {
 //
 //	@Summary	Получение списка загруженных номеров заказов
 //	@Tags		orders
-//	@Failure	401	{object}	httputil.HTTPError	"пользователь не авторизован"
-//	@Failure	500	{object}	httputil.HTTPError	"внутренняя ошибка сервера"
-//	@Success	200	{object}	Orders				"успешная обработка запроса"
-//	@Success	204	{object}	Orders				"нет данных для ответа"
+//	@Failure	401	{object}	httputil.HTTPError		"пользователь не авторизован"
+//	@Failure	500	{object}	httputil.HTTPError		"внутренняя ошибка сервера"
+//	@Success	200	{object}	GetUserOrdersResponse	"успешная обработка запроса"
+//	@Success	204	"нет данных для ответа"
 //	@Produce	json
 //	@Param		Authorization	header	string	true	"токен авторизации"
 //	@Router		/api/user/orders [get]
@@ -158,11 +158,16 @@ func GetUserOrders(svc *service.Service) func(c *gin.Context) {
 			c.Status(http.StatusNoContent)
 			return
 		}
-		jo := make(Orders, len(ro))
+		res := make(GetUserOrdersResponse, len(ro)) //TODO: sort
 		for i, order := range ro {
-			jo[i] = Order{Number: order.Number, Status: order.Status, Accrual: order.Accrual.InexactFloat64(), UploadedAt: JSONTime(order.UploadedAt)}
+			res[i] = Order{
+				Number:     order.Number,
+				Status:     order.Status,
+				Accrual:    order.Accrual.InexactFloat64(),
+				UploadedAt: JSONTime(order.UploadedAt),
+			}
 		}
-		c.JSON(http.StatusOK, &jo)
+		c.JSON(http.StatusOK, &res)
 	}
 }
 
@@ -185,7 +190,7 @@ func GetUserBalance(svc *service.Service) func(c *gin.Context) {
 			httputil.NewError(c, http.StatusInternalServerError, err)
 			return
 		}
-		jb := BalanceResponse{Current: balance.Current.InexactFloat64(), Withdrawn: balance.Withdrawn.InexactFloat64()}
+		jb := BalanceResponse{Current: balance.Current.InexactFloat64(), Withdrawn: balance.Withdraw.InexactFloat64()}
 		c.JSON(http.StatusOK, &jb)
 	}
 }
@@ -229,5 +234,41 @@ func UserBalanceWithdraw(svc *service.Service) func(c *gin.Context) {
 			httputil.NewError(c, http.StatusInternalServerError, err)
 			return
 		}
+	}
+}
+
+// GetUserWithdrawals возвращает список выводов средств
+//
+//	@Summary	Получение информации о выводе средств
+//	@Tags		balance
+//	@Success	200	{object}	GetUserWithdrawalsResponse	"успешная обработка запроса"
+//	@Success	204	"нет ни одного списания"
+//	@Failure	401	{object}	httputil.HTTPError	"пользователь не авторизован"
+//	@Failure	500	{object}	httputil.HTTPError	"внутренняя ошибка сервера"
+//	@Produce	json
+//	@Param		Authorization	header	string	true	"токен авторизации"
+//	@Router		/api/user/withdrawals [get]
+func GetUserWithdrawals(svc *service.Service) func(c *gin.Context) {
+	return func(c *gin.Context) {
+		c.Header("content-type", "application/json")
+		userID := c.GetInt64("userID")
+		withdrawals, err := svc.GetUserWithdrawals(c, userID)
+		if err != nil {
+			httputil.NewError(c, http.StatusInternalServerError, err)
+			return
+		}
+		if len(withdrawals) == 0 {
+			c.Status(http.StatusNoContent)
+			return
+		}
+		res := make(GetUserWithdrawalsResponse, len(withdrawals)) // TODO: sort
+		for i, withdraw := range withdrawals {
+			res[i] = Withdraw{
+				Order:       withdraw.OrderNumber,
+				Sum:         withdraw.Withdraw.InexactFloat64(),
+				ProcessedAt: JSONTime(withdraw.ProcessedAt),
+			}
+		}
+		c.JSON(http.StatusOK, &res)
 	}
 }

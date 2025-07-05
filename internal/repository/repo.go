@@ -94,16 +94,37 @@ func (r *Repository) UpdateOrderAccrualStatus(ctx context.Context, orderNumber s
 func (r *Repository) GetUserBalance(ctx context.Context, userID int64) (balance domain.Balance, err error) {
 	q := `
 	SELECT
-		COALESCE(total_accrual.sum, 0) - COALESCE(total_withdrawns.sum, 0) AS current_accrual,
-		COALESCE(total_withdrawns.sum, 0) AS total_withdrawns
+		COALESCE(total_accrual.sum, 0) - COALESCE(total_withdrawals.sum, 0) AS current_accrual,
+		COALESCE(total_withdrawals.sum, 0) AS total_withdrawals
 	FROM
 		(SELECT SUM(accrual) AS sum FROM orders WHERE user_id = $1) total_accrual,
-		(SELECT SUM(withdrawn) AS sum FROM withdrawns WHERE user_id = $1) total_withdrawns`
-	err = r.QueryRow(ctx, q, userID).Scan(&balance.Current, &balance.Withdrawn)
+		(SELECT SUM(withdraw) AS sum FROM withdrawals WHERE user_id = $1) total_withdrawals`
+	err = r.QueryRow(ctx, q, userID).Scan(&balance.Current, &balance.Withdraw)
 	return balance, err
 }
 
-func (r *Repository) AddWithdraw(ctx context.Context, userID int64, withdraw decimal.Decimal) error {
-	_, err := r.Exec(ctx, "INSERT INTO withdrawns (user_id, withdrawn) VALUES ($1, $2)", userID, withdraw)
+func (r *Repository) AddWithdraw(ctx context.Context, userID int64, orderNumber string, withdraw decimal.Decimal) error {
+	q := "INSERT INTO withdrawals (user_id, order_number, withdraw) VALUES ($1, $2, $3)"
+	_, err := r.Exec(ctx, q, userID, orderNumber, withdraw)
 	return err
+}
+
+func (r *Repository) GetUserWithdrawals(ctx context.Context, userID int64) ([]domain.Withdraw, error) {
+	q := "SELECT order_number, withdraw, processed_at FROM withdrawals WHERE user_id = $1"
+	rows, err := r.Query(ctx, q, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var withdrawals []domain.Withdraw
+	for rows.Next() {
+		var withdraw domain.Withdraw
+		err := rows.Scan(&withdraw.OrderNumber, &withdraw.Withdraw, &withdraw.ProcessedAt)
+		if err != nil {
+			return nil, err
+		}
+		withdrawals = append(withdrawals, withdraw)
+	}
+	return withdrawals, nil
 }

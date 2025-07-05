@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS "order_queue"
     created_at     TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL,
     started_at     TIMESTAMPTZ                           NULL,
     locked_until   TIMESTAMPTZ                           NULL,
-    scheduled_for	 TIMESTAMPTZ                           NULL,
+    scheduled_for  TIMESTAMPTZ                           NULL,
     processed_at   TIMESTAMPTZ                           NULL,
     consumed_count INTEGER     DEFAULT 0                 NOT NULL,
     error_detail   TEXT                                  NULL,

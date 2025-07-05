@@ -24,6 +24,12 @@ type Order struct {
 }
 
 type Balance struct {
-	Current   decimal.Decimal
-	Withdrawn decimal.Decimal
+	Current  decimal.Decimal
+	Withdraw decimal.Decimal
+}
+
+type Withdraw struct {
+	OrderNumber string
+	Withdraw    decimal.Decimal
+	ProcessedAt time.Time
 }

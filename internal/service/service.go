@@ -88,10 +88,18 @@ func (s *Service) WithdrawUserBalance(ctx context.Context, orderNumber string, u
 		return err
 	}
 	if balance.Current.GreaterThanOrEqual(withdraw) {
-		err = s.repo.AddWithdraw(ctx, userID, withdraw)
+		err = s.repo.AddWithdraw(ctx, userID, orderNumber, withdraw)
 		return err
 	}
 	return errors.New("insufficient balance")
+}
+
+func (s *Service) GetUserWithdrawals(ctx context.Context, userID int64) ([]domain.Withdraw, error) {
+	withdrawals, err := s.repo.GetUserWithdrawals(ctx, userID)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return make([]domain.Withdraw, 0), nil
+	}
+	return withdrawals, err
 }
 
 func (s *Service) Publish(orderNumber string) {

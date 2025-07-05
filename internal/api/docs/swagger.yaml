@@ -56,6 +56,18 @@ definitions:
         example: 751
         type: number
     type: object
+  api.Withdraw:
+    properties:
+      order:
+        example: "2377225624"
+        type: string
+      processed_at:
+        example: "2025-07-05T16:35:32+03:00"
+        type: string
+      sum:
+        example: 500
+        type: number
+    type: object
   httputil.HTTPError:
     properties:
       code:
@@ -199,10 +211,6 @@ paths:
             type: array
         "204":
           description: нет данных для ответа
-          schema:
-            items:
-              $ref: '#/definitions/api.Order'
-            type: array
         "401":
           description: пользователь не авторизован
           schema:
@@ -284,4 +292,34 @@ paths:
       summary: Регистрация пользователя
       tags:
       - auth
+  /api/user/withdrawals:
+    get:
+      parameters:
+      - description: токен авторизации
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: успешная обработка запроса
+          schema:
+            items:
+              $ref: '#/definitions/api.Withdraw'
+            type: array
+        "204":
+          description: нет ни одного списания
+        "401":
+          description: пользователь не авторизован
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+        "500":
+          description: внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+      summary: Получение информации о выводе средств
+      tags:
+      - balance
 swagger: "2.0"

@@ -12,5 +12,5 @@ CREATE UNIQUE INDEX IF NOT EXISTS users_login_uindex ON users (login);
 -- +goose StatementEnd
 -- +goose Down
 -- +goose StatementBegin
-DROP TABLE IF EXISTS  users;
+DROP TABLE IF EXISTS users;
 -- +goose StatementEnd

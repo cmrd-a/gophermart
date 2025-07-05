@@ -204,13 +204,7 @@
                         }
                     },
                     "204": {
-                        "description": "нет данных для ответа",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/api.Order"
-                            }
-                        }
+                        "description": "нет данных для ответа"
                     },
                     "401": {
                         "description": "пользователь не авторизован",
@@ -333,6 +327,52 @@
                     }
                 }
             }
+        },
+        "/api/user/withdrawals": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "balance"
+                ],
+                "summary": "Получение информации о выводе средств",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "токен авторизации",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "успешная обработка запроса",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/api.Withdraw"
+                            }
+                        }
+                    },
+                    "204": {
+                        "description": "нет ни одного списания"
+                    },
+                    "401": {
+                        "description": "пользователь не авторизован",
+                        "schema": {
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "внутренняя ошибка сервера",
+                        "schema": {
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -404,6 +444,23 @@
                 "sum": {
                     "type": "number",
                     "example": 751
+                }
+            }
+        },
+        "api.Withdraw": {
+            "type": "object",
+            "properties": {
+                "order": {
+                    "type": "string",
+                    "example": "2377225624"
+                },
+                "processed_at": {
+                    "type": "string",
+                    "example": "2025-07-05T16:35:32+03:00"
+                },
+                "sum": {
+                    "type": "number",
+                    "example": 500
                 }
             }
         },

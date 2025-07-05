@@ -29,13 +29,22 @@ type Order struct {
 	UploadedAt JSONTime `json:"uploaded_at" example:"2025-06-23T23:48:45+03:00"`
 }
 
-type Orders []Order
+type GetUserOrdersResponse []Order
 
 type BalanceResponse struct {
 	Current   float64 `json:"current" example:"500.5"`
 	Withdrawn float64 `json:"withdrawn" example:"42"`
 }
+
 type UserBalanceWithdrawRequest struct {
 	Order string  `json:"order" example:"2377225624"`
 	Sum   float64 `json:"sum" example:"751"`
 }
+
+type Withdraw struct {
+	Order       string   `json:"order" example:"2377225624"`
+	Sum         float64  `json:"sum" example:"500"`
+	ProcessedAt JSONTime `json:"processed_at" example:"2025-07-05T16:35:32+03:00"`
+}
+
+type GetUserWithdrawalsResponse []Withdraw

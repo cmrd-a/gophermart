@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"log"
 	"net/http"
 
 	"github.com/shopspring/decimal"
@@ -67,6 +68,22 @@ func (s *Service) GetUserOrders(ctx context.Context, userID int64) ([]domain.Ord
 
 func (s *Service) GetUserBalance(ctx context.Context, userID int64) (domain.Balance, error) {
 	return s.repo.GetUserBalance(ctx, userID)
+}
+func (s *Service) WithdrawUserBalance(ctx context.Context, orderNumber string, userID int64, withdraw decimal.Decimal) error {
+	order, err := s.repo.GetUserOrder(ctx, userID, orderNumber)
+	if err != nil {
+		return err
+	}
+	log.Println(order)
+	balance, err := s.repo.GetUserBalance(ctx, userID)
+	if err != nil {
+		return err
+	}
+	if balance.Current.GreaterThanOrEqual(withdraw) {
+		err = s.repo.AddWithdraw(ctx, userID, withdraw)
+		return err
+	}
+	return errors.New("insufficient balance")
 }
 
 func (s *Service) Publish(orderNumber string) {

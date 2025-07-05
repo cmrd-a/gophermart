@@ -48,6 +48,64 @@
                 }
             }
         },
+        "/api/user/balance/withdraw": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "balance"
+                ],
+                "summary": "Запрос на списание средств",
+                "parameters": [
+                    {
+                        "description": "номер счёта и сумма баллов к списанию в счёт оплаты",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.UserBalanceWithdrawRequest"
+                        }
+                    },
+                    {
+                        "type": "string",
+                        "description": "токен авторизации",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "успешная обработка запроса",
+                        "schema": {
+                            "$ref": "#/definitions/api.BalanceResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "пользователь не авторизован",
+                        "schema": {
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    },
+                    "402": {
+                        "description": "неверный номер заказа",
+                        "schema": {
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "внутренняя ошибка сервера",
+                        "schema": {
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
         "/api/user/login": {
             "post": {
                 "consumes": [
@@ -318,6 +376,19 @@
                 "uploaded_at": {
                     "type": "string",
                     "example": "2025-06-23T23:48:45+03:00"
+                }
+            }
+        },
+        "api.UserBalanceWithdrawRequest": {
+            "type": "object",
+            "properties": {
+                "order": {
+                    "type": "string",
+                    "example": "2377225624"
+                },
+                "sum": {
+                    "type": "number",
+                    "example": 751
                 }
             }
         },

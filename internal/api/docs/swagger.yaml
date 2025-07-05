@@ -47,6 +47,15 @@ definitions:
         example: "2025-06-23T23:48:45+03:00"
         type: string
     type: object
+  api.UserBalanceWithdrawRequest:
+    properties:
+      order:
+        example: "2377225624"
+        type: string
+      sum:
+        example: 751
+        type: number
+    type: object
   httputil.HTTPError:
     properties:
       code:
@@ -86,6 +95,44 @@ paths:
           schema:
             $ref: '#/definitions/httputil.HTTPError'
       summary: Получение текущего баланса пользователя
+      tags:
+      - balance
+  /api/user/balance/withdraw:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: номер счёта и сумма баллов к списанию в счёт оплаты
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.UserBalanceWithdrawRequest'
+      - description: токен авторизации
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: успешная обработка запроса
+          schema:
+            $ref: '#/definitions/api.BalanceResponse'
+        "401":
+          description: пользователь не авторизован
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+        "402":
+          description: неверный номер заказа
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+        "500":
+          description: внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+      summary: Запрос на списание средств
       tags:
       - balance
   /api/user/login:

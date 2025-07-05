@@ -35,3 +35,7 @@ type BalanceResponse struct {
 	Current   float64 `json:"current" example:"500.5"`
 	Withdrawn float64 `json:"withdrawn" example:"42"`
 }
+type UserBalanceWithdrawRequest struct {
+	Order string  `json:"order" example:"2377225624"`
+	Sum   float64 `json:"sum" example:"751"`
+}

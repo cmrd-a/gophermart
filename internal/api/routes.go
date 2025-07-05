@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/shopspring/decimal"
+
 	"github.com/cmrd-a/gophermart/internal/service"
 	"github.com/gin-gonic/gin"
 	"github.com/swaggo/swag/example/celler/httputil"
@@ -77,6 +79,7 @@ func UserLogin(svc *service.Service) func(c *gin.Context) {
 // PostUserOrders загружает номер заказа
 //
 //	@Summary	Загрузка номера заказа
+//	@Tags		orders
 //	@Success	200	"номер заказа уже был загружен этим пользователем"
 //	@Success	202	"новый номер заказа принят в обработку"
 //	@Failure	400	"неверный формат запроса"
@@ -84,7 +87,6 @@ func UserLogin(svc *service.Service) func(c *gin.Context) {
 //	@Failure	409	"номер заказа уже был загружен другим пользователем"
 //	@Failure	422	"неверный формат номера заказа"
 //	@Failure	500	"внутренняя ошибка сервера"
-//	@Tags		orders
 //	@Accept		plain
 //	@Param		orderNumber		body	string	true	"номер заказа"
 //	@Param		Authorization	header	string	true	"токен авторизации"
@@ -135,11 +137,11 @@ func PostUserOrders(svc *service.Service) func(c *gin.Context) {
 // GetUserOrders возвращает список загруженных номеров заказов
 //
 //	@Summary	Получение списка загруженных номеров заказов
+//	@Tags		orders
 //	@Failure	401	{object}	httputil.HTTPError	"пользователь не авторизован"
 //	@Failure	500	{object}	httputil.HTTPError	"внутренняя ошибка сервера"
-//	@Tags		orders
-//	@Success	200	{object}	Orders	"успешная обработка запроса"
-//	@Success	204	{object}	Orders	"нет данных для ответа"
+//	@Success	200	{object}	Orders				"успешная обработка запроса"
+//	@Success	204	{object}	Orders				"нет данных для ответа"
 //	@Produce	json
 //	@Param		Authorization	header	string	true	"токен авторизации"
 //	@Router		/api/user/orders [get]
@@ -167,10 +169,10 @@ func GetUserOrders(svc *service.Service) func(c *gin.Context) {
 // GetUserBalance возвращает текущий баланс пользователя
 //
 //	@Summary	Получение текущего баланса пользователя
+//	@Tags		balance
 //	@Failure	401	{object}	httputil.HTTPError	"пользователь не авторизован"
 //	@Failure	500	{object}	httputil.HTTPError	"внутренняя ошибка сервера"
-//	@Tags		balance
-//	@Success	200	{object}	BalanceResponse	"успешная обработка запроса"
+//	@Success	200	{object}	BalanceResponse		"успешная обработка запроса"
 //	@Produce	json
 //	@Param		Authorization	header	string	true	"токен авторизации"
 //	@Router		/api/user/balance [get]
@@ -185,5 +187,35 @@ func GetUserBalance(svc *service.Service) func(c *gin.Context) {
 		}
 		jb := BalanceResponse{Current: balance.Current.InexactFloat64(), Withdrawn: balance.Withdrawn.InexactFloat64()}
 		c.JSON(http.StatusOK, &jb)
+	}
+}
+
+// UserBalanceWithdraw списывает средства
+//
+//	@Summary	Запрос на списание средств
+//	@Tags		balance
+//	@Failure	401	{object}	httputil.HTTPError	"пользователь не авторизован"
+//	@Failure	402	{object}	httputil.HTTPError	"на счету недостаточно средств"
+//	@Failure	402	{object}	httputil.HTTPError	"неверный номер заказа"
+//	@Failure	500	{object}	httputil.HTTPError	"внутренняя ошибка сервера"
+//	@Success	200	"успешная обработка запроса"
+//	@Accept		json
+//	@Produce	json
+//	@Param		request			body	UserBalanceWithdrawRequest	true	"номер счёта и сумма баллов к списанию в счёт оплаты"
+//	@Param		Authorization	header	string						true	"токен авторизации"
+//	@Router		/api/user/balance/withdraw [POST]
+func UserBalanceWithdraw(svc *service.Service) func(c *gin.Context) {
+	return func(c *gin.Context) {
+		c.Header("content-type", "application/json")
+		userID := c.GetInt64("userID")
+		r := UserBalanceWithdrawRequest{}
+		if err := c.BindJSON(&r); err != nil {
+			c.String(http.StatusOK, err.Error())
+		}
+		err := svc.WithdrawUserBalance(c, r.Order, userID, decimal.NewFromFloat(r.Sum))
+		if err != nil {
+			httputil.NewError(c, http.StatusInternalServerError, err)
+			return
+		}
 	}
 }

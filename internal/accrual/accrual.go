@@ -3,6 +3,8 @@ package accrual
 import (
 	"fmt"
 
+	"github.com/cmrd-a/gophermart/internal/config"
+
 	"resty.dev/v3"
 )
 
@@ -19,7 +21,7 @@ func (c *Client) GetOrderInfo(orderNumber string) (acc OrderInfoResponse, status
 			fmt.Printf("Warning: failed to close client: %v\n", closeErr)
 		}
 	}()
-	client.SetBaseURL("http://localhost:8080")
+	client.SetBaseURL(config.Config.AccrualSystemAddress)
 
 	statusCode = 0
 	res, err := client.R().SetPathParam("orderNumber", orderNumber).SetResult(&acc).Get("/api/orders/{orderNumber}")

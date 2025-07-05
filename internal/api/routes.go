@@ -27,6 +27,7 @@ import (
 //	@Router		/api/user/register [post]
 func UserRegister(svc *service.Service) func(c *gin.Context) {
 	return func(c *gin.Context) {
+		c.Header("content-type", "application/json")
 		r := LoginPasswordRequest{}
 		if err := c.BindJSON(&r); err != nil {
 			c.String(http.StatusOK, err.Error())
@@ -55,6 +56,7 @@ func UserRegister(svc *service.Service) func(c *gin.Context) {
 //	@Router		/api/user/login [post]
 func UserLogin(svc *service.Service) func(c *gin.Context) {
 	return func(c *gin.Context) {
+		c.Header("content-type", "application/json")
 		r := LoginPasswordRequest{}
 		if err := c.BindJSON(&r); err != nil {
 			c.String(http.StatusOK, err.Error())
@@ -90,7 +92,7 @@ func UserLogin(svc *service.Service) func(c *gin.Context) {
 //	@Router		/api/user/orders [post]
 func PostUserOrders(svc *service.Service) func(c *gin.Context) {
 	return func(c *gin.Context) {
-
+		c.Header("content-type", "application/json")
 		userID := c.GetInt64("userID")
 
 		bodyBytes, err := io.ReadAll(c.Request.Body)
@@ -143,6 +145,7 @@ func PostUserOrders(svc *service.Service) func(c *gin.Context) {
 //	@Router		/api/user/orders [get]
 func GetUserOrders(svc *service.Service) func(c *gin.Context) {
 	return func(c *gin.Context) {
+		c.Header("content-type", "application/json")
 		userID := c.GetInt64("userID")
 		ro, err := svc.GetUserOrders(c, userID)
 		if err != nil {

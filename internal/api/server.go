@@ -26,13 +26,13 @@ func SetupRouter(svc *service.Service) *gin.Engine {
 
 	r.POST("/api/user/register", UserRegister(svc))
 	r.POST("/api/user/login", UserLogin(svc))
-	authorized := r.Group("/")
+	authorized := r.Group("/api/user")
 	authorized.Use(Auth())
-	authorized.POST("/api/user/orders", PostUserOrders(svc))
-	authorized.GET("/api/user/orders", GetUserOrders(svc))
-	authorized.GET("/api/user/balance", GetUserBalance(svc))
-	authorized.POST("/api/user/balance/withdraw", UserBalanceWithdraw(svc))
-	authorized.GET("/api/user/withdrawals", GetUserWithdrawals(svc))
+	authorized.POST("/orders", PostUserOrders(svc))
+	authorized.GET("/orders", GetUserOrders(svc))
+	authorized.GET("/balance", GetUserBalance(svc))
+	authorized.POST("/balance/withdraw", UserBalanceWithdraw(svc))
+	authorized.GET("/withdrawals", GetUserWithdrawals(svc))
 
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	return r

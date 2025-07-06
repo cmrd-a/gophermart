@@ -6,6 +6,7 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"os"
 
 	"golang.org/x/crypto/bcrypt"
 
@@ -140,7 +141,7 @@ func (s *Service) Publish(orderNumber string) {
 }
 
 func (s *Service) consumerJob(ctx context.Context) {
-	if config.Config.DatabaseURI == "" {
+	if config.Config.DatabaseURI == "" || os.Getenv("GITHUB_ACTIONS") != "" {
 		return
 	}
 	db, err := sql.Open("pgx", config.Config.DatabaseURI)

@@ -1,0 +1,325 @@
+basePath: /
+definitions:
+  api.BalanceResponse:
+    properties:
+      current:
+        example: 500.5
+        type: number
+      withdrawn:
+        example: 42
+        type: number
+    type: object
+  api.LoginPasswordRequest:
+    properties:
+      login:
+        example: user@example.com
+        type: string
+      password:
+        example: password
+        type: string
+    required:
+    - login
+    - password
+    type: object
+  api.Order:
+    properties:
+      accrual:
+        example: 500
+        type: number
+      number:
+        example: "42"
+        type: string
+      status:
+        description: |-
+          Статус расчёта начисления:
+          * NEW - заказ загружен в систему, но не попал в обработку;
+          * PROCESSING - вознаграждение за заказ рассчитывается;
+          * INVALID - система расчёта вознаграждений отказала в расчёте;
+          * PROCESSED - данные по заказу проверены и информация о расчёте успешно получена;
+        enum:
+        - NEW
+        - PROCESSING
+        - PROCESSED
+        - INVALID
+        example: PROCESSING
+        type: string
+      uploaded_at:
+        example: "2025-06-23T23:48:45+03:00"
+        type: string
+    type: object
+  api.UserBalanceWithdrawRequest:
+    properties:
+      order:
+        example: "2377225624"
+        type: string
+      sum:
+        example: 751
+        type: number
+    type: object
+  api.Withdraw:
+    properties:
+      order:
+        example: "2377225624"
+        type: string
+      processed_at:
+        example: "2025-07-05T16:35:32+03:00"
+        type: string
+      sum:
+        example: 500
+        type: number
+    type: object
+  httputil.HTTPError:
+    properties:
+      code:
+        example: 400
+        type: integer
+      message:
+        example: status bad request
+        type: string
+    type: object
+info:
+  contact: {}
+  description: Накопительная система лояльности «Гофермарт»
+  title: Gophermart API
+  version: "1.0"
+paths:
+  /api/user/balance:
+    get:
+      parameters:
+      - description: токен авторизации
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: успешная обработка запроса
+          schema:
+            $ref: '#/definitions/api.BalanceResponse'
+        "401":
+          description: пользователь не авторизован
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+        "500":
+          description: внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+      summary: Получение текущего баланса пользователя
+      tags:
+      - balance
+  /api/user/balance/withdraw:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: номер счёта и сумма баллов к списанию в счёт оплаты
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.UserBalanceWithdrawRequest'
+      - description: токен авторизации
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: успешная обработка запроса
+        "400":
+          description: неверный формат запроса
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+        "401":
+          description: пользователь не аутентифицирован
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+        "402":
+          description: неверный номер заказа
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+        "409":
+          description: номер заказа уже был загружен другим пользователем
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+        "422":
+          description: неверный формат номера заказа
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+        "500":
+          description: внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+      summary: Запрос на списание средств
+      tags:
+      - balance
+  /api/user/login:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: данные пользователя для регистрации
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.LoginPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: пользователь успешно аутентифицирован
+          headers:
+            Authorization:
+              description: токен авторизации
+              type: string
+        "400":
+          description: неверный формат запроса
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+        "401":
+          description: неверная пара логин/пароль
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+        "500":
+          description: внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+      summary: Аутентификация пользователя
+      tags:
+      - auth
+  /api/user/orders:
+    get:
+      parameters:
+      - description: токен авторизации
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: успешная обработка запроса
+          schema:
+            items:
+              $ref: '#/definitions/api.Order'
+            type: array
+        "204":
+          description: нет данных для ответа
+        "401":
+          description: пользователь не авторизован
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+        "500":
+          description: внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+      summary: Получение списка загруженных номеров заказов
+      tags:
+      - orders
+    post:
+      consumes:
+      - text/plain
+      parameters:
+      - description: номер заказа
+        in: body
+        name: orderNumber
+        required: true
+        schema:
+          type: string
+      - description: токен авторизации
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: номер заказа уже был загружен этим пользователем
+        "202":
+          description: новый номер заказа принят в обработку
+        "400":
+          description: неверный формат запроса
+        "401":
+          description: пользователь не аутентифицирован
+        "409":
+          description: номер заказа уже был загружен другим пользователем
+        "422":
+          description: неверный формат номера заказа
+        "500":
+          description: внутренняя ошибка сервера
+      summary: Загрузка номера заказа
+      tags:
+      - orders
+  /api/user/register:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: данные пользователя для регистрации
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.LoginPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: пользователь успешно зарегистрирован и аутентифицирован
+          headers:
+            Authorization:
+              description: токен авторизации
+              type: string
+        "400":
+          description: неверный формат запроса
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+        "409":
+          description: логин уже занят
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+        "500":
+          description: внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+      summary: Регистрация пользователя
+      tags:
+      - auth
+  /api/user/withdrawals:
+    get:
+      parameters:
+      - description: токен авторизации
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: успешная обработка запроса
+          schema:
+            items:
+              $ref: '#/definitions/api.Withdraw'
+            type: array
+        "204":
+          description: нет ни одного списания
+        "401":
+          description: пользователь не авторизован
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+        "500":
+          description: внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+      summary: Получение информации о выводе средств
+      tags:
+      - balance
+swagger: "2.0"

@@ -1,0 +1,49 @@
+.PHONY: build test generate fmt lint tidy check cover cover-html cover-cli mock run swag system-deps
+.SILENT: cover
+
+include .env
+export
+
+build:
+	CGO_ENABLED=0 go build -buildvcs=false -o ./bin/gophermart ./cmd/gophermart
+
+test:
+	go test ./... -v
+
+generate:
+	go generate ./...
+	make format
+
+fmt:
+	goimports -l -w .
+	swag fmt
+
+lint:
+	golangci-lint run
+
+tidy:
+	go mod tidy
+
+check: tidy swag fmt tidy build lint cover-cli
+
+cover:
+	go test ./... -coverpkg='./internal/...', -coverprofile coverage-temp.out
+	cat coverage-temp.out | grep -v "mocks" > coverage.out
+	rm coverage-temp.out
+
+cover-html: cover
+	go tool cover -html=coverage.out
+
+cover-cli: cover
+	go tool cover -func=coverage.out
+
+swag:
+	swag init --parseDependency --generalInfo server.go --dir internal/api --output internal/api/docs --parseInternal true
+	swag fmt
+
+run:build
+	./bin/gophermart
+
+system-deps:
+	go install github.com/swaggo/swag/cmd/swag@latest
+	go install github.com/pressly/goose/v3/cmd/goose@latest

@@ -1,6 +1,12 @@
 # gophermart 42
 
-# Начало работы
+## Что сделано сверх [ТЗ](SPECIFICATION.md)
+
+- Полное описание api в swagger
+- Миграции для БД
+- golangci-lint + Github Actions
+
+## Руководство
 
 - `cp .env.example .env`
 - `docker compose up -d`

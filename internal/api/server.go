@@ -5,6 +5,7 @@ import (
 
 	_ "github.com/cmrd-a/gophermart/internal/api/docs"
 	"github.com/cmrd-a/gophermart/internal/service"
+	"github.com/gin-contrib/gzip"
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -17,6 +18,7 @@ import (
 
 func SetupRouter(svc *service.Service) *gin.Engine {
 	r := gin.Default()
+	r.Use(gzip.Gzip(gzip.DefaultCompression))
 	err := r.SetTrustedProxies(nil)
 	if err != nil {
 		log.Printf("error on set trusted proxies:%e", err)

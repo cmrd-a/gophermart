@@ -125,13 +125,8 @@ func (s *Service) Publish(orderNumber string) {
 		}
 	}()
 
-	// create the publisher which may be reused for multiple messages
-	// you may pass the optional PublisherOptions when creating it
 	publisher := pgq.NewPublisher(db)
 
-	// publish the message to the queue
-	// provide the payload which is the JSON object
-	// and optional metadata which is the map[string]string
 	message := fmt.Sprintf(`{"order_number":"%s"}`, orderNumber)
 	msg := &pgq.MessageOutgoing{
 		Payload: json.RawMessage(message),
@@ -158,9 +153,8 @@ func (s *Service) consumerJob(ctx context.Context) {
 		}
 	}()
 
-	// create the consumer which gets attached to handling function we defined above
 	h := NewHandler(s.repo)
-	consumer, err := pgq.NewConsumer(db, queueName, h, pgq.WithMaxConsumeCount(3))
+	consumer, err := pgq.NewConsumer(db, queueName, h, pgq.WithMaxConsumeCount(999))
 	if err != nil {
 		panic(err.Error())
 	}
@@ -227,7 +221,7 @@ func (h *Handler) processRequest(ctx context.Context, orderNumber string) (proce
 		}
 		return true, nil
 	case http.StatusTooManyRequests:
-		return false, nil //TODO:  Retry-After: 60
+		return false, nil
 	case http.StatusInternalServerError:
 		return false, nil
 	}

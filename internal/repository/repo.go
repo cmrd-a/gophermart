@@ -33,13 +33,14 @@ func NewRepository() (*Repository, error) {
 	return &Repository{pool}, nil
 }
 
-func (r *Repository) InsertUser(ctx context.Context, login, password string) (id int64, err error) {
-	err = r.QueryRow(ctx, "INSERT INTO users (login, password) VALUES ($1, $2) RETURNING id", login, password).Scan(&id)
+func (r *Repository) InsertUser(ctx context.Context, login string, passHash []byte) (id int64, err error) {
+	err = r.QueryRow(ctx, "INSERT INTO users (login, password) VALUES ($1, $2) RETURNING id", login, passHash).Scan(&id)
 	return id, err
 }
-func (r *Repository) GetUserID(ctx context.Context, login, password string) (id int64, err error) {
-	err = r.QueryRow(ctx, "SELECT id FROM users WHERE login=$1 AND password=$2", login, password).Scan(&id)
-	return id, err
+
+func (r *Repository) GetUserAuth(ctx context.Context, login string) (userID int64, passHash []byte, err error) {
+	err = r.QueryRow(ctx, "SELECT id, password FROM users WHERE login=$1", login).Scan(&userID, &passHash)
+	return userID, passHash, err
 }
 
 func (r *Repository) AddOrder(ctx context.Context, orderNumber string, userID int64) error {
@@ -60,7 +61,7 @@ func (r *Repository) GetUserOrder(ctx context.Context, userID int64, orderNumber
 	return order, err
 }
 func (r *Repository) GetUserOrders(ctx context.Context, userID int64) ([]domain.Order, error) {
-	q := "SELECT number, status, accrual, uploaded_at, user_id FROM orders WHERE user_id = $1"
+	q := "SELECT number, status, accrual, uploaded_at, user_id FROM orders WHERE user_id = $1 ORDER BY uploaded_at DESC"
 	rows, err := r.Query(ctx, q, userID)
 	if err != nil {
 		return nil, err
@@ -110,7 +111,7 @@ func (r *Repository) AddWithdraw(ctx context.Context, userID int64, orderNumber 
 }
 
 func (r *Repository) GetUserWithdrawals(ctx context.Context, userID int64) ([]domain.Withdraw, error) {
-	q := "SELECT order_number, withdraw, processed_at FROM withdrawals WHERE user_id = $1"
+	q := "SELECT order_number, withdraw, processed_at FROM withdrawals WHERE user_id = $1 ORDER BY processed_at DESC"
 	rows, err := r.Query(ctx, q, userID)
 	if err != nil {
 		return nil, err

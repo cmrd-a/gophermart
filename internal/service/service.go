@@ -7,6 +7,8 @@ import (
 	"log"
 	"net/http"
 
+	"golang.org/x/crypto/bcrypt"
+
 	"github.com/shopspring/decimal"
 
 	"github.com/jackc/pgx/v5"
@@ -38,12 +40,22 @@ func NewService(ctx context.Context, repo repository.Repository) *Service {
 }
 
 func (s *Service) AddUser(ctx context.Context, login string, password string) (userID int64, err error) {
-	return s.repo.InsertUser(ctx, login, password) //TODO: хэш, соль, bcrypt
+	salt := []byte(password + config.Config.SaltSecret)
+	passHash, err := bcrypt.GenerateFromPassword(salt, bcrypt.DefaultCost)
+	if err != nil {
+		return 0, err
+	}
+	return s.repo.InsertUser(ctx, login, passHash)
 }
 
 func (s *Service) CheckLoginPassword(ctx context.Context, login string, password string) (userID int64, err error) {
-	userID, err = s.repo.GetUserID(ctx, login, password)
+	userID, passHash, err := s.repo.GetUserAuth(ctx, login)
 	if errors.Is(err, pgx.ErrNoRows) {
+		return 0, nil
+	}
+	salt := []byte(password + config.Config.SaltSecret)
+	err = bcrypt.CompareHashAndPassword(passHash, salt)
+	if err != nil {
 		return 0, nil
 	}
 	return userID, err

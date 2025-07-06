@@ -2,8 +2,9 @@ package api
 
 import (
 	"net/http"
-	"os"
 	"time"
+
+	"github.com/cmrd-a/gophermart/internal/config"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
@@ -22,7 +23,7 @@ func BuildJWTString(userID int64) (string, error) {
 		UserID: userID,
 	})
 
-	tokenString, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
+	tokenString, err := token.SignedString([]byte(config.Config.JWTSecret))
 	if err != nil {
 		return "", err
 	}
@@ -33,7 +34,7 @@ func BuildJWTString(userID int64) (string, error) {
 func ParseToken(tokenString string) (int64, error) {
 	claims := &Claims{}
 	_, err := jwt.ParseWithClaims(tokenString, claims, func(t *jwt.Token) (any, error) {
-		return []byte(os.Getenv("JWT_SECRET")), nil
+		return []byte(config.Config.JWTSecret), nil
 	})
 	return claims.UserID, err
 }

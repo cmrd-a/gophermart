@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS users
 (
     id       BIGSERIAL PRIMARY KEY,
     login    text NOT NULL,
-    password text NOT NULL
+    password bytea NOT NULL
 );
 -- +goose StatementEnd
 -- +goose StatementBegin

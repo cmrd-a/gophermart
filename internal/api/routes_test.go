@@ -28,12 +28,11 @@ func TestUserRegisterRoute(t *testing.T) {
 	router := SetupRouter(svc)
 
 	login := "some@log.in"
-	password := "somepassword"
 	rows := mock.NewRows([]string{"id"}).AddRow(int64(1))
-	mock.ExpectQuery("INSERT INTO users").WithArgs(login, password).WillReturnRows(rows)
+	mock.ExpectQuery("INSERT INTO users").WithArgs(login, pgxmock.AnyArg()).WillReturnRows(rows)
 
 	w := httptest.NewRecorder()
-	reqBody := fmt.Sprintf(`{"login":"%s", "password":"%s"}`, login, password)
+	reqBody := fmt.Sprintf(`{"login":"%s", "password":"any_password"}`, login)
 	req, _ := http.NewRequest("POST", "/api/user/register", strings.NewReader(reqBody))
 	router.ServeHTTP(w, req)
 

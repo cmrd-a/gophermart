@@ -3,8 +3,11 @@
 # Начало работы
 
 - `cp .env.example .env`
+- `docker compose up -d`
+- `./cmd/accrual/accrual_darwin_arm64 -a :9090`
 - `make run`
 - http://localhost:8080/swagger/index.html
+- `docker compose down`
 
 ---
 

@@ -113,9 +113,6 @@ func PostUserOrders(svc *service.Service) func(c *gin.Context) {
 			return
 		}
 		orderNumber := string(bodyBytes)
-		svc.Publish(orderNumber)
-		// service.Consumer()
-		// time.Sleep(2 * time.Second)
 		orderNumberInt, err := strconv.Atoi(orderNumber)
 		if err != nil {
 			httputil.NewError(c, http.StatusBadRequest, err)
@@ -140,6 +137,7 @@ func PostUserOrders(svc *service.Service) func(c *gin.Context) {
 			httputil.NewError(c, http.StatusBadRequest, err)
 			return
 		}
+		svc.Publish(orderNumber)
 		c.Status(http.StatusAccepted)
 	}
 }
@@ -168,7 +166,7 @@ func GetUserOrders(svc *service.Service) func(c *gin.Context) {
 			c.Status(http.StatusNoContent)
 			return
 		}
-		res := make(GetUserOrdersResponse, len(ro)) //TODO: sort
+		res := make(GetUserOrdersResponse, len(ro))
 		for i, order := range ro {
 			res[i] = Order{
 				Number:     order.Number,
@@ -271,7 +269,7 @@ func GetUserWithdrawals(svc *service.Service) func(c *gin.Context) {
 			c.Status(http.StatusNoContent)
 			return
 		}
-		res := make(GetUserWithdrawalsResponse, len(withdrawals)) // TODO: sort
+		res := make(GetUserWithdrawalsResponse, len(withdrawals))
 		for i, withdraw := range withdrawals {
 			res[i] = Withdraw{
 				Order:       withdraw.OrderNumber,

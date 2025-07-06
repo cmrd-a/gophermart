@@ -18,6 +18,7 @@ require (
 	github.com/swaggo/swag/example/celler v0.0.0-20250321074624-93e86851e9f2
 	github.com/theplant/luhn v0.0.0-20170224032821-81a1a381387a
 	go.dataddo.com/pgq v0.0.0-20250217145018-c8b263b44bb7
+	golang.org/x/crypto v0.38.0
 	resty.dev/v3 v3.0.0-beta.3
 )
 
@@ -79,7 +80,6 @@ require (
 	go.opentelemetry.io/otel/trace v1.35.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/arch v0.8.0 // indirect
-	golang.org/x/crypto v0.38.0 // indirect
 	golang.org/x/net v0.40.0 // indirect
 	golang.org/x/sync v0.14.0 // indirect
 	golang.org/x/sys v0.33.0 // indirect

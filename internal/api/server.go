@@ -4,7 +4,6 @@ import (
 	"log"
 
 	_ "github.com/cmrd-a/gophermart/internal/api/docs"
-	"github.com/cmrd-a/gophermart/internal/api/middleware"
 	"github.com/cmrd-a/gophermart/internal/service"
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
@@ -26,7 +25,7 @@ func SetupRouter(svc *service.Service) *gin.Engine {
 	r.POST("/api/user/register", UserRegister(svc))
 	r.POST("/api/user/login", UserLogin(svc))
 	authorized := r.Group("/")
-	authorized.Use(middleware.Auth())
+	authorized.Use(Auth())
 	authorized.POST("/api/user/orders", PostUserOrders(svc))
 	authorized.GET("/api/user/orders", GetUserOrders(svc))
 	authorized.GET("/api/user/balance", GetUserBalance(svc))

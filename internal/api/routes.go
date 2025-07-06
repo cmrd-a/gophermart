@@ -39,7 +39,12 @@ func UserRegister(svc *service.Service) func(c *gin.Context) {
 			httputil.NewError(c, http.StatusBadRequest, err)
 			return
 		}
-		c.Header("Authorization", strconv.Itoa(int(userID)))
+		token, err := BuildJWTString(userID)
+		if err != nil {
+			httputil.NewError(c, http.StatusInternalServerError, err)
+			return
+		}
+		c.Header("Authorization", token)
 	}
 }
 
@@ -69,7 +74,12 @@ func UserLogin(svc *service.Service) func(c *gin.Context) {
 			return
 		}
 		if userID > 0 {
-			c.Header("Authorization", strconv.Itoa(int(userID)))
+			token, err := BuildJWTString(userID)
+			if err != nil {
+				httputil.NewError(c, http.StatusInternalServerError, err)
+				return
+			}
+			c.Header("Authorization", token)
 			return
 		}
 		httputil.NewError(c, http.StatusUnauthorized, errors.New("invalid login/password pair"))

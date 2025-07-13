@@ -1,0 +1,257 @@
+package service
+
+import (
+	"context"
+	"encoding/json"
+	"errors"
+	"log/slog"
+	"net/http"
+	"os"
+
+	"golang.org/x/crypto/bcrypt"
+
+	"github.com/shopspring/decimal"
+
+	"github.com/jackc/pgx/v5"
+
+	"github.com/cmrd-a/gophermart/internal/accrual"
+	"github.com/cmrd-a/gophermart/internal/config"
+	"github.com/cmrd-a/gophermart/internal/domain"
+	"github.com/cmrd-a/gophermart/internal/repository"
+
+	"database/sql"
+
+	_ "github.com/jackc/pgx/v5/stdlib"
+
+	"go.dataddo.com/pgq"
+)
+
+var queueName = "order_queue"
+
+type Service struct {
+	ctx  context.Context
+	repo repository.Repository
+}
+
+func NewService(ctx context.Context, repo repository.Repository) *Service {
+	s := &Service{ctx: ctx, repo: repo}
+	go s.consumerJob(ctx)
+	return s
+}
+
+func (s *Service) AddUser(ctx context.Context, login string, password string) (userID int64, err error) {
+	salt := []byte(password + config.Config.SaltSecret)
+	passHash, err := bcrypt.GenerateFromPassword(salt, bcrypt.DefaultCost)
+	if err != nil {
+		return 0, err
+	}
+	return s.repo.InsertUser(ctx, login, passHash)
+}
+
+func (s *Service) CheckLoginPassword(ctx context.Context, login string, password string) (userID int64, err error) {
+	userID, passHash, err := s.repo.GetUserAuth(ctx, login)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return 0, nil
+	}
+	salt := []byte(password + config.Config.SaltSecret)
+	err = bcrypt.CompareHashAndPassword(passHash, salt)
+	if err != nil {
+		return 0, nil
+	}
+	return userID, err
+}
+
+func (s *Service) AddOrder(ctx context.Context, orderNumber string, userID int64) error {
+	return s.repo.AddOrder(ctx, orderNumber, userID)
+}
+
+func (s *Service) GetOrder(ctx context.Context, orderNumber string) *domain.Order {
+	var order domain.Order
+	order, err := s.repo.GetOrder(ctx, orderNumber)
+	if err != nil {
+		return nil
+	}
+	return &order
+}
+
+func (s *Service) GetUserOrders(ctx context.Context, userID int64) ([]domain.Order, error) {
+	return s.repo.GetUserOrders(ctx, userID)
+}
+
+func (s *Service) GetUserBalance(ctx context.Context, userID int64) (domain.Balance, error) {
+	return s.repo.GetUserBalance(ctx, userID)
+}
+func (s *Service) WithdrawUserBalance(ctx context.Context, orderNumber string, userID int64, withdraw decimal.Decimal) error {
+	order, err := s.repo.GetOrder(ctx, orderNumber)
+	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
+		return err
+	}
+	empty := domain.Order{}
+	if order != empty {
+		return errors.New("old order")
+	}
+	err = s.AddOrder(ctx, orderNumber, userID)
+	if err != nil {
+		return err
+	}
+	balance, err := s.repo.GetUserBalance(ctx, userID)
+	if err != nil {
+		return err
+	}
+	if balance.Current.GreaterThanOrEqual(withdraw) {
+		err = s.repo.AddWithdraw(ctx, userID, orderNumber, withdraw)
+		return err
+	}
+	return errors.New("insufficient balance")
+}
+
+func (s *Service) GetUserWithdrawals(ctx context.Context, userID int64) ([]domain.Withdraw, error) {
+	withdrawals, err := s.repo.GetUserWithdrawals(ctx, userID)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return make([]domain.Withdraw, 0), nil
+	}
+	return withdrawals, err
+}
+
+func (s *Service) Publish(orderNumber string) {
+	db, err := sql.Open("pgx", config.Config.DatabaseURI)
+	if err != nil {
+		panic(err.Error())
+	}
+	defer func() {
+		if closeErr := db.Close(); closeErr != nil {
+			slog.Warn("Failed to close database connection", "error", closeErr)
+		}
+	}()
+
+	publisher := pgq.NewPublisher(db)
+
+	message := `{"order_number":"` + orderNumber + `"}`
+	msg := &pgq.MessageOutgoing{
+		Payload: json.RawMessage(message),
+	}
+	msgID, err := publisher.Publish(context.Background(), queueName, msg)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	slog.Info("Message published", "message_id", msgID, "order_number", orderNumber)
+}
+
+func (s *Service) consumerJob(ctx context.Context) {
+	if config.Config.DatabaseURI == "" || os.Getenv("DISABLE_QUEUE") != "" {
+		return
+	}
+	db, err := sql.Open("pgx", config.Config.DatabaseURI)
+	if err != nil {
+		panic(err.Error())
+	}
+	defer func() {
+		if closeErr := db.Close(); closeErr != nil {
+			slog.Warn("Failed to close database connection", "error", closeErr)
+		}
+	}()
+
+	h := NewHandler(s.repo)
+	consumer, err := pgq.NewConsumer(db, queueName, h, pgq.WithMaxConsumeCount(999))
+	if err != nil {
+		panic(err.Error())
+	}
+
+	err = consumer.Run(ctx)
+	if err != nil {
+		panic(err.Error())
+	}
+}
+
+type Handler struct {
+	repo repository.Repository
+}
+
+func NewHandler(repo repository.Repository) *Handler {
+	return &Handler{repo: repo}
+}
+
+func (h *Handler) HandleMessage(ctx context.Context, msg *pgq.MessageIncoming) (processed bool, err error) {
+	slog.Debug("Received message", "payload", string(msg.Payload))
+	var payload struct {
+		OrderNumber string `json:"order_number"`
+	}
+
+	err = json.Unmarshal(msg.Payload, &payload)
+	if err != nil {
+		return false, err
+	}
+
+	order, err := h.repo.GetOrder(ctx, payload.OrderNumber)
+	if err != nil {
+		return false, err
+	}
+	switch order.Status {
+	case string(domain.NEW):
+		err = h.repo.UpdateOrderStatus(ctx, payload.OrderNumber, domain.PROCESSING)
+		if err != nil {
+			return false, err
+		}
+		return h.processRequest(ctx, payload.OrderNumber)
+	case string(domain.PROCESSING):
+		return h.processRequest(ctx, payload.OrderNumber)
+	case string(domain.PROCESSED):
+		return true, nil
+	case string(domain.INVALID):
+		return true, nil
+	}
+
+	return true, nil
+}
+
+func (h *Handler) processRequest(ctx context.Context, orderNumber string) (processed bool, err error) {
+	client := accrual.NewClient()
+	acc, statusCode, err := client.GetOrderInfo(orderNumber)
+	if err != nil {
+		return false, err
+	}
+	switch statusCode {
+	case http.StatusOK:
+		return h.processSuccessResponse(ctx, acc)
+	case http.StatusNoContent:
+		err = h.repo.UpdateOrderStatus(ctx, acc.Order, domain.PROCESSED)
+		if err != nil {
+			return false, err
+		}
+		return true, nil
+	case http.StatusTooManyRequests:
+		return false, nil
+	case http.StatusInternalServerError:
+		return false, nil
+	}
+	return false, nil
+}
+
+func (h *Handler) processSuccessResponse(ctx context.Context, acc accrual.OrderInfoResponse) (processed bool, err error) {
+	slog.Debug("Processing success response", "order_number", acc.Order, "status", acc.Status, "accrual", acc.Accrual)
+
+	switch acc.Status {
+	case string(accrual.REGISTERED):
+		return false, nil
+	case string(accrual.INVALID):
+		err = h.repo.UpdateOrderStatus(ctx, acc.Order, domain.INVALID)
+		if err != nil {
+			slog.Error("Failed to update order status to invalid", "error", err, "order_number", acc.Order)
+			return false, err
+		}
+		return true, err
+	case string(accrual.PROCESSING):
+		return false, nil
+	case string(accrual.PROCESSED):
+		d := decimal.NewFromFloat(acc.Accrual)
+		err = h.repo.UpdateOrderAccrualStatus(ctx, acc.Order, d, domain.PROCESSED)
+		if err != nil {
+			slog.Error("Failed to update order accrual status", "error", err, "order_number", acc.Order, "accrual", acc.Accrual)
+			return false, err
+		}
+		slog.Info("Order processed successfully", "order_number", acc.Order, "accrual", acc.Accrual)
+		return true, nil
+	}
+	return false, nil
+}

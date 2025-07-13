@@ -1,25 +1,24 @@
-# go-musthave-diploma-tpl
+# gophermart 42
 
-Шаблон репозитория для индивидуального дипломного проекта курса "Самостоятельный Go-разработчик"
+## Что сделано сверх [ТЗ](SPECIFICATION.md)
 
-# Начало работы
+- Полное описание api в swagger
+- Миграции для БД
+- golangci-lint + Github Actions
 
-1. Склонируйте репозиторий в любую подходящую директорию на вашем компьютере
-2. В корне репозитория выполните команду `go mod init <name>` (где `<name>` - адрес вашего репозитория на Github без
-   префикса `https://`) для создания модуля
+## Руководство
 
-# Обновление шаблона
+- `cp .env.example .env`
+- `docker compose up -d`
+- `./cmd/accrual/accrual_darwin_arm64 -a :9090`
+- `make run`
+- http://localhost:8080/swagger/index.html
+- `docker compose down`
 
-Чтобы иметь возможность получать обновления автотестов и других частей шаблона выполните следующую команды:
+---
 
-```
-git remote add -m main template https://github.com/yandex-praktikum/go-musthave-diploma-tpl.git
-```
+- `git remote add -m master template https://github.com/yandex-praktikum/go-musthave-diploma-tpl.git`
+- `git fetch template && git checkout template/master .github`
 
-Для обновления кода автотестов выполните команду:
 
-```
-git fetch template && git checkout template/main .github
-```
 
-затем добавьте полученые изменения в свой репозиторий.

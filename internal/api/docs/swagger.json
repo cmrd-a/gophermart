@@ -1,0 +1,481 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "Накопительная система лояльности «Гофермарт»",
+        "title": "Gophermart API",
+        "contact": {},
+        "version": "1.0"
+    },
+    "basePath": "/",
+    "paths": {
+        "/api/user/balance": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "balance"
+                ],
+                "summary": "Получение текущего баланса пользователя",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "токен авторизации",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "успешная обработка запроса",
+                        "schema": {
+                            "$ref": "#/definitions/api.BalanceResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "пользователь не авторизован",
+                        "schema": {
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "внутренняя ошибка сервера",
+                        "schema": {
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/user/balance/withdraw": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "balance"
+                ],
+                "summary": "Запрос на списание средств",
+                "parameters": [
+                    {
+                        "description": "номер счёта и сумма баллов к списанию в счёт оплаты",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.UserBalanceWithdrawRequest"
+                        }
+                    },
+                    {
+                        "type": "string",
+                        "description": "токен авторизации",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "успешная обработка запроса"
+                    },
+                    "400": {
+                        "description": "неверный формат запроса",
+                        "schema": {
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "пользователь не аутентифицирован",
+                        "schema": {
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    },
+                    "402": {
+                        "description": "неверный номер заказа",
+                        "schema": {
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    },
+                    "409": {
+                        "description": "номер заказа уже был загружен другим пользователем",
+                        "schema": {
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    },
+                    "422": {
+                        "description": "неверный формат номера заказа",
+                        "schema": {
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "внутренняя ошибка сервера",
+                        "schema": {
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/user/login": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Аутентификация пользователя",
+                "parameters": [
+                    {
+                        "description": "данные пользователя для регистрации",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.LoginPasswordRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "пользователь успешно аутентифицирован",
+                        "headers": {
+                            "Authorization": {
+                                "type": "string",
+                                "description": "токен авторизации"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "неверный формат запроса",
+                        "schema": {
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "неверная пара логин/пароль",
+                        "schema": {
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "внутренняя ошибка сервера",
+                        "schema": {
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/user/orders": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "orders"
+                ],
+                "summary": "Получение списка загруженных номеров заказов",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "токен авторизации",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "успешная обработка запроса",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/api.Order"
+                            }
+                        }
+                    },
+                    "204": {
+                        "description": "нет данных для ответа"
+                    },
+                    "401": {
+                        "description": "пользователь не авторизован",
+                        "schema": {
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "внутренняя ошибка сервера",
+                        "schema": {
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "consumes": [
+                    "text/plain"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "orders"
+                ],
+                "summary": "Загрузка номера заказа",
+                "parameters": [
+                    {
+                        "description": "номер заказа",
+                        "name": "orderNumber",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "type": "string",
+                        "description": "токен авторизации",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "номер заказа уже был загружен этим пользователем"
+                    },
+                    "202": {
+                        "description": "новый номер заказа принят в обработку"
+                    },
+                    "400": {
+                        "description": "неверный формат запроса"
+                    },
+                    "401": {
+                        "description": "пользователь не аутентифицирован"
+                    },
+                    "409": {
+                        "description": "номер заказа уже был загружен другим пользователем"
+                    },
+                    "422": {
+                        "description": "неверный формат номера заказа"
+                    },
+                    "500": {
+                        "description": "внутренняя ошибка сервера"
+                    }
+                }
+            }
+        },
+        "/api/user/register": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Регистрация пользователя",
+                "parameters": [
+                    {
+                        "description": "данные пользователя для регистрации",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.LoginPasswordRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "пользователь успешно зарегистрирован и аутентифицирован",
+                        "headers": {
+                            "Authorization": {
+                                "type": "string",
+                                "description": "токен авторизации"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "неверный формат запроса",
+                        "schema": {
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    },
+                    "409": {
+                        "description": "логин уже занят",
+                        "schema": {
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "внутренняя ошибка сервера",
+                        "schema": {
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/user/withdrawals": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "balance"
+                ],
+                "summary": "Получение информации о выводе средств",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "токен авторизации",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "успешная обработка запроса",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/api.Withdraw"
+                            }
+                        }
+                    },
+                    "204": {
+                        "description": "нет ни одного списания"
+                    },
+                    "401": {
+                        "description": "пользователь не авторизован",
+                        "schema": {
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "внутренняя ошибка сервера",
+                        "schema": {
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "api.BalanceResponse": {
+            "type": "object",
+            "properties": {
+                "current": {
+                    "type": "number",
+                    "example": 500.5
+                },
+                "withdrawn": {
+                    "type": "number",
+                    "example": 42
+                }
+            }
+        },
+        "api.LoginPasswordRequest": {
+            "type": "object",
+            "required": [
+                "login",
+                "password"
+            ],
+            "properties": {
+                "login": {
+                    "type": "string",
+                    "example": "user@example.com"
+                },
+                "password": {
+                    "type": "string",
+                    "example": "password"
+                }
+            }
+        },
+        "api.Order": {
+            "type": "object",
+            "properties": {
+                "accrual": {
+                    "type": "number",
+                    "example": 500
+                },
+                "number": {
+                    "type": "string",
+                    "example": "42"
+                },
+                "status": {
+                    "description": "Статус расчёта начисления:\n* NEW - заказ загружен в систему, но не попал в обработку;\n* PROCESSING - вознаграждение за заказ рассчитывается;\n* INVALID - система расчёта вознаграждений отказала в расчёте;\n* PROCESSED - данные по заказу проверены и информация о расчёте успешно получена;",
+                    "type": "string",
+                    "enum": [
+                        "NEW",
+                        "PROCESSING",
+                        "PROCESSED",
+                        "INVALID"
+                    ],
+                    "example": "PROCESSING"
+                },
+                "uploaded_at": {
+                    "type": "string",
+                    "example": "2025-06-23T23:48:45+03:00"
+                }
+            }
+        },
+        "api.UserBalanceWithdrawRequest": {
+            "type": "object",
+            "properties": {
+                "order": {
+                    "type": "string",
+                    "example": "2377225624"
+                },
+                "sum": {
+                    "type": "number",
+                    "example": 751
+                }
+            }
+        },
+        "api.Withdraw": {
+            "type": "object",
+            "properties": {
+                "order": {
+                    "type": "string",
+                    "example": "2377225624"
+                },
+                "processed_at": {
+                    "type": "string",
+                    "example": "2025-07-05T16:35:32+03:00"
+                },
+                "sum": {
+                    "type": "number",
+                    "example": 500
+                }
+            }
+        },
+        "httputil.HTTPError": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer",
+                    "example": 400
+                },
+                "message": {
+                    "type": "string",
+                    "example": "status bad request"
+                }
+            }
+        }
+    }
+}

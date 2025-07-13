@@ -1,8 +1,7 @@
 package config
 
 import (
-	"fmt"
-
+	"log/slog"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -24,12 +23,14 @@ func InitConfig() {
 		Use: "gophermart",
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := viper.Unmarshal(&Config); err != nil {
-				fmt.Printf("Unable to decode into struct, %v\n", err)
+				slog.Error("Unable to decode config into struct", "error", err)
 				return
 			}
-			fmt.Println("RunAddress:", Config.RunAddress)
-			fmt.Println("DatabaseURI:", Config.DatabaseURI)
-			fmt.Println("AccrualSystemAddress:", Config.AccrualSystemAddress)
+			slog.Info("Configuration loaded",
+				"run_address", Config.RunAddress,
+				"database_uri", maskURI(Config.DatabaseURI),
+				"accrual_system_address", Config.AccrualSystemAddress,
+			)
 		},
 	}
 	rootCmd.Flags().StringP("address", "a", ":8080", "gophermart address and port")
@@ -41,7 +42,15 @@ func InitConfig() {
 	viper.BindPFlags(rootCmd.Flags())
 	viper.AutomaticEnv()
 	if err := rootCmd.Execute(); err != nil {
-		fmt.Println(err)
+		slog.Error("Failed to execute command", "error", err)
 		os.Exit(1)
 	}
+}
+
+// maskURI masks sensitive information in database URI for logging
+func maskURI(uri string) string {
+	if uri == "" {
+		return ""
+	}
+	return "***masked***"
 }

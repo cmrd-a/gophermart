@@ -2,7 +2,8 @@ package main
 
 import (
 	"context"
-	"log"
+	"log/slog"
+	"os"
 
 	"github.com/cmrd-a/gophermart/migrations"
 
@@ -13,13 +14,23 @@ import (
 )
 
 func main() {
+	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+		Level: slog.LevelDebug,
+	}))
+	slog.SetDefault(logger)
+
 	config.InitConfig()
 	migrations.Migrate()
-	repo, _ := repository.NewRepository()
+	repo, err := repository.NewRepository()
+	if err != nil {
+		slog.Error("Failed to create repository", "error", err.Error())
+		os.Exit(1)
+	}
 	svc := service.NewService(context.TODO(), *repo)
 	r := api.SetupRouter(svc)
-	err := r.Run(config.Config.RunAddress)
+	err = r.Run(config.Config.RunAddress)
 	if err != nil {
-		log.Fatal(err.Error())
+		slog.Error("Failed to start server", "error", err.Error())
+		os.Exit(1)
 	}
 }

@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
 
@@ -20,7 +20,6 @@ import (
 	"github.com/cmrd-a/gophermart/internal/repository"
 
 	"database/sql"
-	"fmt"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 
@@ -95,7 +94,6 @@ func (s *Service) WithdrawUserBalance(ctx context.Context, orderNumber string, u
 	if err != nil {
 		return err
 	}
-	log.Println(order)
 	balance, err := s.repo.GetUserBalance(ctx, userID)
 	if err != nil {
 		return err
@@ -122,13 +120,13 @@ func (s *Service) Publish(orderNumber string) {
 	}
 	defer func() {
 		if closeErr := db.Close(); closeErr != nil {
-			fmt.Printf("Warning: failed to close database connection: %v\n", closeErr)
+			slog.Warn("Failed to close database connection", "error", closeErr)
 		}
 	}()
 
 	publisher := pgq.NewPublisher(db)
 
-	message := fmt.Sprintf(`{"order_number":"%s"}`, orderNumber)
+	message := `{"order_number":"` + orderNumber + `"}`
 	msg := &pgq.MessageOutgoing{
 		Payload: json.RawMessage(message),
 	}
@@ -137,7 +135,7 @@ func (s *Service) Publish(orderNumber string) {
 		panic(err.Error())
 	}
 
-	fmt.Println("Message published with ID:", msgID)
+	slog.Info("Message published", "message_id", msgID, "order_number", orderNumber)
 }
 
 func (s *Service) consumerJob(ctx context.Context) {
@@ -150,7 +148,7 @@ func (s *Service) consumerJob(ctx context.Context) {
 	}
 	defer func() {
 		if closeErr := db.Close(); closeErr != nil {
-			fmt.Printf("Warning: failed to close database connection: %v\n", closeErr)
+			slog.Warn("Failed to close database connection", "error", closeErr)
 		}
 	}()
 
@@ -175,7 +173,7 @@ func NewHandler(repo repository.Repository) *Handler {
 }
 
 func (h *Handler) HandleMessage(ctx context.Context, msg *pgq.MessageIncoming) (processed bool, err error) {
-	fmt.Println("Message payload:", string(msg.Payload))
+	slog.Debug("Received message", "payload", string(msg.Payload))
 	var payload struct {
 		OrderNumber string `json:"order_number"`
 	}
@@ -206,6 +204,7 @@ func (h *Handler) HandleMessage(ctx context.Context, msg *pgq.MessageIncoming) (
 
 	return true, nil
 }
+
 func (h *Handler) processRequest(ctx context.Context, orderNumber string) (processed bool, err error) {
 	client := accrual.NewClient()
 	acc, statusCode, err := client.GetOrderInfo(orderNumber)
@@ -230,12 +229,15 @@ func (h *Handler) processRequest(ctx context.Context, orderNumber string) (proce
 }
 
 func (h *Handler) processSuccessResponse(ctx context.Context, acc accrual.OrderInfoResponse) (processed bool, err error) {
+	slog.Debug("Processing success response", "order_number", acc.Order, "status", acc.Status, "accrual", acc.Accrual)
+
 	switch acc.Status {
 	case string(accrual.REGISTERED):
 		return false, nil
 	case string(accrual.INVALID):
 		err = h.repo.UpdateOrderStatus(ctx, acc.Order, domain.INVALID)
 		if err != nil {
+			slog.Error("Failed to update order status to invalid", "error", err, "order_number", acc.Order)
 			return false, err
 		}
 		return true, err
@@ -245,8 +247,10 @@ func (h *Handler) processSuccessResponse(ctx context.Context, acc accrual.OrderI
 		d := decimal.NewFromFloat(acc.Accrual)
 		err = h.repo.UpdateOrderAccrualStatus(ctx, acc.Order, d, domain.PROCESSED)
 		if err != nil {
+			slog.Error("Failed to update order accrual status", "error", err, "order_number", acc.Order, "accrual", acc.Accrual)
 			return false, err
 		}
+		slog.Info("Order processed successfully", "order_number", acc.Order, "accrual", acc.Accrual)
 		return true, nil
 	}
 	return false, nil

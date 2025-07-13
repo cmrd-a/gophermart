@@ -1,7 +1,7 @@
 package accrual
 
 import (
-	"fmt"
+	"log/slog"
 
 	"github.com/cmrd-a/gophermart/internal/config"
 
@@ -18,7 +18,7 @@ func (c *Client) GetOrderInfo(orderNumber string) (acc OrderInfoResponse, status
 	client := resty.New().SetDebug(true)
 	defer func() {
 		if closeErr := client.Close(); closeErr != nil {
-			fmt.Printf("Warning: failed to close client: %v\n", closeErr)
+			slog.Warn("Failed to close HTTP client", "error", closeErr)
 		}
 	}()
 	client.SetBaseURL(config.Config.AccrualSystemAddress)
